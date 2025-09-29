@@ -14,6 +14,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { Heart } from "lucide-react"
+import { countries } from "@/lib/countries"
 
 export default function SignUpPage() {
   const [formData, setFormData] = useState({
@@ -21,10 +22,12 @@ export default function SignUpPage() {
     password: "",
     confirmPassword: "",
     displayName: "",
-    age: "",
+    dateOfBirth: "",
     gender: "",
     lookingFor: "",
-    location: "",
+    country: "",
+    city: "",
+    address: "",
     bio: "",
     phoneNumber: "",
     interests: "",
@@ -42,6 +45,17 @@ export default function SignUpPage() {
     setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
+  const calculateAge = (dob: string): number => {
+    const birthDate = new Date(dob)
+    const today = new Date()
+    let age = today.getFullYear() - birthDate.getFullYear()
+    const monthDiff = today.getMonth() - birthDate.getMonth()
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--
+    }
+    return age
+  }
+
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
     const supabase = createClient()
@@ -54,7 +68,14 @@ export default function SignUpPage() {
       return
     }
 
-    if (Number.parseInt(formData.age) < 18) {
+    if (!formData.dateOfBirth) {
+      setError("Date of birth is required")
+      setIsLoading(false)
+      return
+    }
+
+    const age = calculateAge(formData.dateOfBirth)
+    if (age < 18) {
       setError("You must be 18 or older to join")
       setIsLoading(false)
       return
@@ -62,6 +83,12 @@ export default function SignUpPage() {
 
     if (!formData.agreeToTerms) {
       setError("You must agree to the terms and conditions")
+      setIsLoading(false)
+      return
+    }
+
+    if (!formData.country || !formData.city) {
+      setError("Country and city are required")
       setIsLoading(false)
       return
     }
@@ -74,10 +101,14 @@ export default function SignUpPage() {
           emailRedirectTo: process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${window.location.origin}/dashboard`,
           data: {
             display_name: formData.displayName,
-            age: Number.parseInt(formData.age),
+            age: age,
+            date_of_birth: formData.dateOfBirth,
             gender: formData.gender,
             looking_for: formData.lookingFor,
-            location: formData.location,
+            location: `${formData.city}, ${formData.country}`,
+            country: formData.country,
+            city: formData.city,
+            address: formData.address,
             bio: formData.bio,
             phone_number: formData.phoneNumber,
             interests: formData.interests,
@@ -85,6 +116,8 @@ export default function SignUpPage() {
             height: formData.height,
             body_type: formData.bodyType,
             ethnicity: formData.ethnicity,
+            terms_accepted: formData.agreeToTerms,
+            terms_accepted_at: new Date().toISOString(),
           },
         },
       })
@@ -115,212 +148,264 @@ export default function SignUpPage() {
           </CardHeader>
           <CardContent className="pt-6">
             <form onSubmit={handleSignUp} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email *</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="your@email.com"
-                    required
-                    value={formData.email}
-                    onChange={(e) => handleInputChange("email", e.target.value)}
-                  />
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-900">Account Information</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email *</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="your@email.com"
+                      required
+                      value={formData.email}
+                      onChange={(e) => handleInputChange("email", e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="displayName">Display Name *</Label>
+                    <Input
+                      id="displayName"
+                      type="text"
+                      placeholder="Your name"
+                      required
+                      value={formData.displayName}
+                      onChange={(e) => handleInputChange("displayName", e.target.value)}
+                    />
+                  </div>
                 </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="password">Password *</Label>
+                    <Input
+                      id="password"
+                      type="password"
+                      required
+                      value={formData.password}
+                      onChange={(e) => handleInputChange("password", e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="confirmPassword">Confirm Password *</Label>
+                    <Input
+                      id="confirmPassword"
+                      type="password"
+                      required
+                      value={formData.confirmPassword}
+                      onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-4 pt-4 border-t">
+                <h3 className="text-lg font-semibold text-gray-900">Personal Information</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="dateOfBirth">Date of Birth *</Label>
+                    <Input
+                      id="dateOfBirth"
+                      type="date"
+                      required
+                      max={new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().split("T")[0]}
+                      value={formData.dateOfBirth}
+                      onChange={(e) => handleInputChange("dateOfBirth", e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="phoneNumber">Mobile Number *</Label>
+                    <Input
+                      id="phoneNumber"
+                      type="tel"
+                      placeholder="+1 (555) 000-0000"
+                      required
+                      value={formData.phoneNumber}
+                      onChange={(e) => handleInputChange("phoneNumber", e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="gender">Gender *</Label>
+                    <Select value={formData.gender} onValueChange={(value) => handleInputChange("gender", value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select gender" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="man">Man</SelectItem>
+                        <SelectItem value="woman">Woman</SelectItem>
+                        <SelectItem value="non-binary">Non-binary</SelectItem>
+                        <SelectItem value="transgender">Transgender</SelectItem>
+                        <SelectItem value="genderqueer">Genderqueer</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="lookingFor">Looking For *</Label>
+                    <Select
+                      value={formData.lookingFor}
+                      onValueChange={(value) => handleInputChange("lookingFor", value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Looking for" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="men">Men</SelectItem>
+                        <SelectItem value="women">Women</SelectItem>
+                        <SelectItem value="non-binary">Non-binary</SelectItem>
+                        <SelectItem value="everyone">Everyone</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-4 pt-4 border-t">
+                <h3 className="text-lg font-semibold text-gray-900">Location</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="country">Country *</Label>
+                    <Select value={formData.country} onValueChange={(value) => handleInputChange("country", value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select country" />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-[300px]">
+                        {countries.map((country) => (
+                          <SelectItem key={country.code} value={country.name}>
+                            {country.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="city">City *</Label>
+                    <Input
+                      id="city"
+                      type="text"
+                      placeholder="Your city"
+                      required
+                      value={formData.city}
+                      onChange={(e) => handleInputChange("city", e.target.value)}
+                    />
+                  </div>
+                </div>
+
                 <div className="space-y-2">
-                  <Label htmlFor="displayName">Display Name *</Label>
+                  <Label htmlFor="address">Address</Label>
                   <Input
-                    id="displayName"
+                    id="address"
                     type="text"
-                    placeholder="Your name"
-                    required
-                    value={formData.displayName}
-                    onChange={(e) => handleInputChange("displayName", e.target.value)}
+                    placeholder="Street address (optional)"
+                    value={formData.address}
+                    onChange={(e) => handleInputChange("address", e.target.value)}
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="password">Password *</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    required
-                    value={formData.password}
-                    onChange={(e) => handleInputChange("password", e.target.value)}
-                  />
+              <div className="space-y-4 pt-4 border-t">
+                <h3 className="text-lg font-semibold text-gray-900">Additional Details</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="height">Height</Label>
+                    <Input
+                      id="height"
+                      type="text"
+                      placeholder="5'10&quot;"
+                      value={formData.height}
+                      onChange={(e) => handleInputChange("height", e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="bodyType">Body Type</Label>
+                    <Select value={formData.bodyType} onValueChange={(value) => handleInputChange("bodyType", value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="slim">Slim</SelectItem>
+                        <SelectItem value="athletic">Athletic</SelectItem>
+                        <SelectItem value="average">Average</SelectItem>
+                        <SelectItem value="muscular">Muscular</SelectItem>
+                        <SelectItem value="curvy">Curvy</SelectItem>
+                        <SelectItem value="heavyset">Heavyset</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="ethnicity">Ethnicity</Label>
+                    <Input
+                      id="ethnicity"
+                      type="text"
+                      placeholder="Your ethnicity"
+                      value={formData.ethnicity}
+                      onChange={(e) => handleInputChange("ethnicity", e.target.value)}
+                    />
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Confirm Password *</Label>
-                  <Input
-                    id="confirmPassword"
-                    type="password"
-                    required
-                    value={formData.confirmPassword}
-                    onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
-                  />
-                </div>
-              </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="age">Age *</Label>
-                  <Input
-                    id="age"
-                    type="number"
-                    min="18"
-                    max="100"
-                    required
-                    value={formData.age}
-                    onChange={(e) => handleInputChange("age", e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="location">Location *</Label>
-                  <Input
-                    id="location"
-                    type="text"
-                    placeholder="City, State"
-                    required
-                    value={formData.location}
-                    onChange={(e) => handleInputChange("location", e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="phoneNumber">Phone Number</Label>
-                  <Input
-                    id="phoneNumber"
-                    type="tel"
-                    placeholder="+1 (555) 000-0000"
-                    value={formData.phoneNumber}
-                    onChange={(e) => handleInputChange("phoneNumber", e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="gender">Gender *</Label>
-                  <Select value={formData.gender} onValueChange={(value) => handleInputChange("gender", value)}>
+                  <Label htmlFor="relationshipGoals">Relationship Goals</Label>
+                  <Select
+                    value={formData.relationshipGoals}
+                    onValueChange={(value) => handleInputChange("relationshipGoals", value)}
+                  >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select gender" />
+                      <SelectValue placeholder="What are you looking for?" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="man">Man</SelectItem>
-                      <SelectItem value="woman">Woman</SelectItem>
-                      <SelectItem value="non-binary">Non-binary</SelectItem>
-                      <SelectItem value="transgender">Transgender</SelectItem>
-                      <SelectItem value="genderqueer">Genderqueer</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
+                      <SelectItem value="friendship">Friendship</SelectItem>
+                      <SelectItem value="dating">Dating</SelectItem>
+                      <SelectItem value="relationship">Long-term Relationship</SelectItem>
+                      <SelectItem value="casual">Casual Dating</SelectItem>
+                      <SelectItem value="hookup">Hookup</SelectItem>
+                      <SelectItem value="open">Open to Anything</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="lookingFor">Looking For *</Label>
-                  <Select value={formData.lookingFor} onValueChange={(value) => handleInputChange("lookingFor", value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Looking for" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="men">Men</SelectItem>
-                      <SelectItem value="women">Women</SelectItem>
-                      <SelectItem value="non-binary">Non-binary</SelectItem>
-                      <SelectItem value="everyone">Everyone</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="height">Height</Label>
+                  <Label htmlFor="interests">Interests & Hobbies</Label>
                   <Input
-                    id="height"
+                    id="interests"
                     type="text"
-                    placeholder="5'10&quot;"
-                    value={formData.height}
-                    onChange={(e) => handleInputChange("height", e.target.value)}
+                    placeholder="e.g., Travel, Music, Fitness, Cooking"
+                    value={formData.interests}
+                    onChange={(e) => handleInputChange("interests", e.target.value)}
                   />
                 </div>
+
                 <div className="space-y-2">
-                  <Label htmlFor="bodyType">Body Type</Label>
-                  <Select value={formData.bodyType} onValueChange={(value) => handleInputChange("bodyType", value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="slim">Slim</SelectItem>
-                      <SelectItem value="athletic">Athletic</SelectItem>
-                      <SelectItem value="average">Average</SelectItem>
-                      <SelectItem value="muscular">Muscular</SelectItem>
-                      <SelectItem value="curvy">Curvy</SelectItem>
-                      <SelectItem value="heavyset">Heavyset</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="ethnicity">Ethnicity</Label>
-                  <Input
-                    id="ethnicity"
-                    type="text"
-                    placeholder="Your ethnicity"
-                    value={formData.ethnicity}
-                    onChange={(e) => handleInputChange("ethnicity", e.target.value)}
+                  <Label htmlFor="bio">Bio</Label>
+                  <Textarea
+                    id="bio"
+                    placeholder="Tell us about yourself..."
+                    value={formData.bio}
+                    onChange={(e) => handleInputChange("bio", e.target.value)}
+                    rows={3}
                   />
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="relationshipGoals">Relationship Goals</Label>
-                <Select
-                  value={formData.relationshipGoals}
-                  onValueChange={(value) => handleInputChange("relationshipGoals", value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="What are you looking for?" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="friendship">Friendship</SelectItem>
-                    <SelectItem value="dating">Dating</SelectItem>
-                    <SelectItem value="relationship">Long-term Relationship</SelectItem>
-                    <SelectItem value="casual">Casual Dating</SelectItem>
-                    <SelectItem value="hookup">Hookup</SelectItem>
-                    <SelectItem value="open">Open to Anything</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="interests">Interests & Hobbies</Label>
-                <Input
-                  id="interests"
-                  type="text"
-                  placeholder="e.g., Travel, Music, Fitness, Cooking"
-                  value={formData.interests}
-                  onChange={(e) => handleInputChange("interests", e.target.value)}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="bio">Bio</Label>
-                <Textarea
-                  id="bio"
-                  placeholder="Tell us about yourself..."
-                  value={formData.bio}
-                  onChange={(e) => handleInputChange("bio", e.target.value)}
-                  rows={3}
-                />
-              </div>
-
-              <div className="flex items-start space-x-2">
+              <div className="flex items-start space-x-2 pt-4 border-t">
                 <Checkbox
                   id="terms"
                   checked={formData.agreeToTerms}
                   onCheckedChange={(checked) => handleInputChange("agreeToTerms", checked as boolean)}
                 />
                 <label htmlFor="terms" className="text-sm text-gray-600 leading-relaxed">
-                  I agree to the Terms of Service and Privacy Policy. I am at least 18 years old.
+                  I agree to the{" "}
+                  <Link href="/terms" target="_blank" className="text-rose-600 hover:text-rose-700 underline">
+                    Terms of Service
+                  </Link>{" "}
+                  and{" "}
+                  <Link href="/privacy" target="_blank" className="text-rose-600 hover:text-rose-700 underline">
+                    Privacy Policy
+                  </Link>
+                  . I am at least 18 years old and confirm that all information provided is accurate. *
                 </label>
               </div>
 
