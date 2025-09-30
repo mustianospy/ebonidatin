@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -10,10 +9,11 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
-import { Heart } from "lucide-react"
+import { Heart, AlertCircle } from "lucide-react"
 import { countries } from "@/lib/countries"
 
 export default function SignUpPage() {
@@ -58,12 +58,17 @@ export default function SignUpPage() {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
-    const supabase = createClient()
     setIsLoading(true)
     setError(null)
 
     if (formData.password !== formData.confirmPassword) {
       setError("Passwords do not match")
+      setIsLoading(false)
+      return
+    }
+
+    if (formData.password.length < 6) {
+      setError("Password must be at least 6 characters long")
       setIsLoading(false)
       return
     }
@@ -93,12 +98,20 @@ export default function SignUpPage() {
       return
     }
 
+    if (!formData.gender || !formData.lookingFor) {
+      setError("Please select your gender and who you're looking for")
+      setIsLoading(false)
+      return
+    }
+
     try {
-      const { error } = await supabase.auth.signUp({
-        email: formData.email,
+      const supabase = createClient()
+
+      const { error: signUpError } = await supabase.auth.signUp({
+        email: formData.email.trim(),
         password: formData.password,
         options: {
-          emailRedirectTo: process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${window.location.origin}/dashboard`,
+          emailRedirectTo: `${window.location.origin}/dashboard`,
           data: {
             display_name: formData.displayName,
             age: age,
@@ -121,29 +134,31 @@ export default function SignUpPage() {
           },
         },
       })
-      if (error) throw error
+
+      if (signUpError) {
+        console.error("[v0] Signup error:", signUpError)
+        throw signUpError
+      }
+
       router.push("/auth/verify-email")
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "An error occurred")
-    } finally {
+      console.error("[v0] Signup catch error:", error)
+      const errorMessage = error instanceof Error ? error.message : "An error occurred during signup"
+      setError(errorMessage)
       setIsLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-rose-50 via-amber-50 to-orange-50 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-teal-50 to-cyan-50 p-4">
       <div className="w-full max-w-2xl">
         <Card className="shadow-xl border-0">
           <CardHeader className="text-center pb-2">
             <div className="flex items-center justify-center gap-2 mb-2">
-              <Heart className="h-8 w-8 text-rose-600 fill-rose-600" />
-              <span className="text-2xl font-bold bg-gradient-to-r from-rose-600 to-orange-600 bg-clip-text text-transparent">
-                Eboni Dating
-              </span>
+              <Heart className="h-8 w-8 text-primary fill-primary" />
+              <span className="text-2xl font-bold text-primary">Eboni Dating</span>
             </div>
-            <CardTitle className="text-3xl font-bold bg-gradient-to-r from-rose-600 to-orange-600 bg-clip-text text-transparent">
-              Join Our Community
-            </CardTitle>
+            <CardTitle className="text-3xl font-bold text-gray-900">Join Our Community</CardTitle>
             <CardDescription className="text-gray-600">Create your profile to start connecting</CardDescription>
           </CardHeader>
           <CardContent className="pt-6">
@@ -160,6 +175,7 @@ export default function SignUpPage() {
                       required
                       value={formData.email}
                       onChange={(e) => handleInputChange("email", e.target.value)}
+                      disabled={isLoading}
                     />
                   </div>
                   <div className="space-y-2">
@@ -171,6 +187,7 @@ export default function SignUpPage() {
                       required
                       value={formData.displayName}
                       onChange={(e) => handleInputChange("displayName", e.target.value)}
+                      disabled={isLoading}
                     />
                   </div>
                 </div>
@@ -182,8 +199,10 @@ export default function SignUpPage() {
                       id="password"
                       type="password"
                       required
+                      minLength={6}
                       value={formData.password}
                       onChange={(e) => handleInputChange("password", e.target.value)}
+                      disabled={isLoading}
                     />
                   </div>
                   <div className="space-y-2">
@@ -194,6 +213,7 @@ export default function SignUpPage() {
                       required
                       value={formData.confirmPassword}
                       onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
+                      disabled={isLoading}
                     />
                   </div>
                 </div>
@@ -211,6 +231,7 @@ export default function SignUpPage() {
                       max={new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().split("T")[0]}
                       value={formData.dateOfBirth}
                       onChange={(e) => handleInputChange("dateOfBirth", e.target.value)}
+                      disabled={isLoading}
                     />
                   </div>
                   <div className="space-y-2">
@@ -222,6 +243,7 @@ export default function SignUpPage() {
                       required
                       value={formData.phoneNumber}
                       onChange={(e) => handleInputChange("phoneNumber", e.target.value)}
+                      disabled={isLoading}
                     />
                   </div>
                 </div>
@@ -229,7 +251,11 @@ export default function SignUpPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="gender">Gender *</Label>
-                    <Select value={formData.gender} onValueChange={(value) => handleInputChange("gender", value)}>
+                    <Select
+                      value={formData.gender}
+                      onValueChange={(value) => handleInputChange("gender", value)}
+                      disabled={isLoading}
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Select gender" />
                       </SelectTrigger>
@@ -248,6 +274,7 @@ export default function SignUpPage() {
                     <Select
                       value={formData.lookingFor}
                       onValueChange={(value) => handleInputChange("lookingFor", value)}
+                      disabled={isLoading}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Looking for" />
@@ -268,7 +295,11 @@ export default function SignUpPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="country">Country *</Label>
-                    <Select value={formData.country} onValueChange={(value) => handleInputChange("country", value)}>
+                    <Select
+                      value={formData.country}
+                      onValueChange={(value) => handleInputChange("country", value)}
+                      disabled={isLoading}
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Select country" />
                       </SelectTrigger>
@@ -290,24 +321,26 @@ export default function SignUpPage() {
                       required
                       value={formData.city}
                       onChange={(e) => handleInputChange("city", e.target.value)}
+                      disabled={isLoading}
                     />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="address">Address</Label>
+                  <Label htmlFor="address">Address (Optional)</Label>
                   <Input
                     id="address"
                     type="text"
-                    placeholder="Street address (optional)"
+                    placeholder="Street address"
                     value={formData.address}
                     onChange={(e) => handleInputChange("address", e.target.value)}
+                    disabled={isLoading}
                   />
                 </div>
               </div>
 
               <div className="space-y-4 pt-4 border-t">
-                <h3 className="text-lg font-semibold text-gray-900">Additional Details</h3>
+                <h3 className="text-lg font-semibold text-gray-900">Additional Details (Optional)</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="height">Height</Label>
@@ -317,11 +350,16 @@ export default function SignUpPage() {
                       placeholder="5'10&quot;"
                       value={formData.height}
                       onChange={(e) => handleInputChange("height", e.target.value)}
+                      disabled={isLoading}
                     />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="bodyType">Body Type</Label>
-                    <Select value={formData.bodyType} onValueChange={(value) => handleInputChange("bodyType", value)}>
+                    <Select
+                      value={formData.bodyType}
+                      onValueChange={(value) => handleInputChange("bodyType", value)}
+                      disabled={isLoading}
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Select" />
                       </SelectTrigger>
@@ -343,6 +381,7 @@ export default function SignUpPage() {
                       placeholder="Your ethnicity"
                       value={formData.ethnicity}
                       onChange={(e) => handleInputChange("ethnicity", e.target.value)}
+                      disabled={isLoading}
                     />
                   </div>
                 </div>
@@ -352,6 +391,7 @@ export default function SignUpPage() {
                   <Select
                     value={formData.relationshipGoals}
                     onValueChange={(value) => handleInputChange("relationshipGoals", value)}
+                    disabled={isLoading}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="What are you looking for?" />
@@ -375,6 +415,7 @@ export default function SignUpPage() {
                     placeholder="e.g., Travel, Music, Fitness, Cooking"
                     value={formData.interests}
                     onChange={(e) => handleInputChange("interests", e.target.value)}
+                    disabled={isLoading}
                   />
                 </div>
 
@@ -386,6 +427,7 @@ export default function SignUpPage() {
                     value={formData.bio}
                     onChange={(e) => handleInputChange("bio", e.target.value)}
                     rows={3}
+                    disabled={isLoading}
                   />
                 </div>
               </div>
@@ -395,33 +437,35 @@ export default function SignUpPage() {
                   id="terms"
                   checked={formData.agreeToTerms}
                   onCheckedChange={(checked) => handleInputChange("agreeToTerms", checked as boolean)}
+                  disabled={isLoading}
                 />
                 <label htmlFor="terms" className="text-sm text-gray-600 leading-relaxed">
                   I agree to the{" "}
-                  <Link href="/terms" target="_blank" className="text-rose-600 hover:text-rose-700 underline">
+                  <Link href="/terms" target="_blank" className="text-primary hover:text-primary/80 underline">
                     Terms of Service
                   </Link>{" "}
                   and{" "}
-                  <Link href="/privacy" target="_blank" className="text-rose-600 hover:text-rose-700 underline">
+                  <Link href="/privacy" target="_blank" className="text-primary hover:text-primary/80 underline">
                     Privacy Policy
                   </Link>
                   . I am at least 18 years old and confirm that all information provided is accurate. *
                 </label>
               </div>
 
-              {error && <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">{error}</div>}
+              {error && (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
 
-              <Button
-                type="submit"
-                className="w-full h-11 bg-gradient-to-r from-rose-600 to-orange-600 hover:from-rose-700 hover:to-orange-700"
-                disabled={isLoading}
-              >
+              <Button type="submit" className="w-full h-11 bg-primary hover:bg-primary/90" disabled={isLoading}>
                 {isLoading ? "Creating Account..." : "Create Account"}
               </Button>
             </form>
             <div className="mt-6 text-center text-sm text-gray-600">
               Already have an account?{" "}
-              <Link href="/auth/login" className="font-medium text-rose-600 hover:text-rose-500">
+              <Link href="/auth/login" className="font-medium text-primary hover:text-primary/80">
                 Sign in
               </Link>
             </div>

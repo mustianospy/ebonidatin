@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -10,7 +9,8 @@ import { Label } from "@/components/ui/label"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
-import { Heart } from "lucide-react"
+import { Heart, AlertCircle } from "lucide-react"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -21,17 +21,27 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    const supabase = createClient()
     setIsLoading(true)
     setError(null)
 
+    if (!email || !password) {
+      setError("Please enter both email and password")
+      setIsLoading(false)
+      return
+    }
+
     try {
+      const supabase = createClient()
+
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-        email,
+        email: email.trim(),
         password,
       })
 
-      if (authError) throw authError
+      if (authError) {
+        console.error("[v0] Login error:", authError)
+        throw authError
+      }
 
       if (authData.user && !authData.user.email_confirmed_at) {
         await supabase.auth.signOut()
@@ -41,27 +51,25 @@ export default function LoginPage() {
       }
 
       router.push("/dashboard")
+      router.refresh()
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "An error occurred")
-    } finally {
+      console.error("[v0] Login catch error:", error)
+      const errorMessage = error instanceof Error ? error.message : "Unable to sign in. Please check your credentials."
+      setError(errorMessage)
       setIsLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-rose-50 via-amber-50 to-orange-50 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-teal-50 to-cyan-50 p-4">
       <div className="w-full max-w-md">
         <Card className="shadow-xl border-0">
           <CardHeader className="text-center pb-2">
             <div className="flex items-center justify-center gap-2 mb-2">
-              <Heart className="h-8 w-8 text-rose-600 fill-rose-600" />
-              <span className="text-2xl font-bold bg-gradient-to-r from-rose-600 to-orange-600 bg-clip-text text-transparent">
-                Eboni Dating
-              </span>
+              <Heart className="h-8 w-8 text-primary fill-primary" />
+              <span className="text-2xl font-bold text-primary">Eboni Dating</span>
             </div>
-            <CardTitle className="text-3xl font-bold bg-gradient-to-r from-rose-600 to-orange-600 bg-clip-text text-transparent">
-              Welcome Back
-            </CardTitle>
+            <CardTitle className="text-3xl font-bold text-gray-900">Welcome Back</CardTitle>
             <CardDescription className="text-gray-600">Sign in to your account to continue</CardDescription>
           </CardHeader>
           <CardContent className="pt-6">
@@ -76,6 +84,7 @@ export default function LoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="h-11"
+                  disabled={isLoading}
                 />
               </div>
               <div className="space-y-2">
@@ -87,20 +96,24 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="h-11"
+                  disabled={isLoading}
                 />
               </div>
-              {error && <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">{error}</div>}
-              <Button
-                type="submit"
-                className="w-full h-11 bg-gradient-to-r from-rose-600 to-orange-600 hover:from-rose-700 hover:to-orange-700"
-                disabled={isLoading}
-              >
+
+              {error && (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+
+              <Button type="submit" className="w-full h-11 bg-primary hover:bg-primary/90" disabled={isLoading}>
                 {isLoading ? "Signing in..." : "Sign In"}
               </Button>
             </form>
             <div className="mt-6 text-center text-sm text-gray-600">
               Don't have an account?{" "}
-              <Link href="/auth/signup" className="font-medium text-rose-600 hover:text-rose-500">
+              <Link href="/auth/signup" className="font-medium text-primary hover:text-primary/80">
                 Sign up
               </Link>
             </div>
