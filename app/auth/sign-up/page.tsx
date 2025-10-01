@@ -12,27 +12,42 @@ import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { Heart } from "lucide-react"
 
-export default function LoginPage() {
+export default function SignUpPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [repeatPassword, setRepeatPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
     const supabase = createClient()
     setIsLoading(true)
     setError(null)
 
+    if (password !== repeatPassword) {
+      setError("Passwords do not match")
+      setIsLoading(false)
+      return
+    }
+
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters long")
+      setIsLoading(false)
+      return
+    }
+
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          emailRedirectTo: process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${window.location.origin}/dashboard`,
+        },
       })
       if (error) throw error
-      router.push("/dashboard")
-      router.refresh()
+      router.push("/auth/sign-up-success")
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred")
     } finally {
@@ -52,11 +67,11 @@ export default function LoginPage() {
 
           <Card className="border-2">
             <CardHeader>
-              <CardTitle className="text-2xl">Welcome Back</CardTitle>
-              <CardDescription>Sign in to your account to continue your journey</CardDescription>
+              <CardTitle className="text-2xl">Create Account</CardTitle>
+              <CardDescription>Join thousands finding meaningful connections</CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleLogin}>
+              <form onSubmit={handleSignUp}>
                 <div className="flex flex-col gap-6">
                   <div className="grid gap-2">
                     <Label htmlFor="email">Email</Label>
@@ -79,22 +94,44 @@ export default function LoginPage() {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       disabled={isLoading}
+                      placeholder="At least 6 characters"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="repeat-password">Confirm Password</Label>
+                    <Input
+                      id="repeat-password"
+                      type="password"
+                      required
+                      value={repeatPassword}
+                      onChange={(e) => setRepeatPassword(e.target.value)}
+                      disabled={isLoading}
                     />
                   </div>
                   {error && (
                     <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">{error}</div>
                   )}
                   <Button type="submit" className="w-full bg-cyan-600 hover:bg-cyan-700" disabled={isLoading}>
-                    {isLoading ? "Signing in..." : "Sign In"}
+                    {isLoading ? "Creating account..." : "Create Account"}
                   </Button>
                 </div>
+                <div className="mt-4 text-center text-sm text-muted-foreground">
+                  By signing up, you agree to our{" "}
+                  <Link href="/terms" className="text-cyan-600 hover:text-cyan-700 underline">
+                    Terms
+                  </Link>{" "}
+                  and{" "}
+                  <Link href="/privacy" className="text-cyan-600 hover:text-cyan-700 underline">
+                    Privacy Policy
+                  </Link>
+                </div>
                 <div className="mt-4 text-center text-sm">
-                  Don&apos;t have an account?{" "}
+                  Already have an account?{" "}
                   <Link
-                    href="/auth/sign-up"
+                    href="/auth/login"
                     className="text-cyan-600 hover:text-cyan-700 underline underline-offset-4 font-medium"
                   >
-                    Sign up
+                    Sign in
                   </Link>
                 </div>
               </form>

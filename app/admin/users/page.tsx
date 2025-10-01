@@ -1,15 +1,13 @@
-import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
-import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Heart, ArrowLeft, Mail, MapPin, Calendar } from "lucide-react"
+import { createClient } from "@/lib/supabase/server"
 import Link from "next/link"
-import { AdminUserActions } from "@/components/admin-user-actions"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Shield, ArrowLeft } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
 
-export default async function AdminUsersPage() {
+async function checkAdminAccess() {
   const supabase = await createClient()
-
   const {
     data: { user },
   } = await supabase.auth.getUser()
@@ -18,120 +16,85 @@ export default async function AdminUsersPage() {
     redirect("/admin/login")
   }
 
-  const { data: profile } = await supabase.from("profiles").select("is_admin").eq("id", user.id).single()
+  const { data: adminUser } = await supabase.from("admin_users").select("*").eq("user_id", user.id).single()
 
-  if (!profile?.is_admin) {
-    redirect("/dashboard")
+  if (!adminUser) {
+    redirect("/")
   }
 
+  return { user, adminUser }
+}
+
+export default async function AdminUsersPage() {
+  await checkAdminAccess()
+
+  const supabase = await createClient()
+
   // Fetch all users with their profiles
-  const { data: users } = await supabase
+  const { data: profiles } = await supabase
     .from("profiles")
     .select("*")
     .order("created_at", { ascending: false })
-    .limit(100)
+    .limit(50)
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-rose-50 via-amber-50 to-orange-50">
-      <nav className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
+    <div className="min-h-screen bg-gray-50">
+      <header className="bg-white border-b sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Heart className="h-8 w-8 text-rose-600 fill-rose-600" />
-            <span className="text-2xl font-bold bg-gradient-to-r from-rose-600 to-orange-600 bg-clip-text text-transparent">
-              Eboni Dating Admin
-            </span>
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="icon" asChild>
+              <Link href="/admin">
+                <ArrowLeft className="h-5 w-5" />
+              </Link>
+            </Button>
+            <div className="flex items-center gap-2">
+              <Shield className="h-6 w-6 text-cyan-600" />
+              <span className="text-xl font-bold">User Management</span>
+            </div>
           </div>
-          <Button asChild variant="outline">
-            <Link href="/admin">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Dashboard
-            </Link>
-          </Button>
         </div>
-      </nav>
+      </header>
 
       <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-4xl font-bold">User Management</h1>
-          <div className="text-gray-600">Total Users: {users?.length || 0}</div>
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">All Users</h1>
+          <p className="text-gray-600">Total: {profiles?.length || 0} users</p>
         </div>
 
-        <div className="grid gap-4">
-          {users?.map((userProfile) => (
-            <Card key={userProfile.id} className="hover:shadow-lg transition-shadow">
-              <CardContent className="p-6">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-3">
-                      <h3 className="text-xl font-bold">{userProfile.display_name}</h3>
-                      <Badge
-                        variant={
-                          userProfile.tier === "gold"
-                            ? "default"
-                            : userProfile.tier === "silver"
-                              ? "secondary"
-                              : "outline"
-                        }
-                        className={
-                          userProfile.tier === "gold"
-                            ? "bg-gradient-to-r from-amber-400 to-yellow-500"
-                            : userProfile.tier === "silver"
-                              ? "bg-gradient-to-r from-slate-300 to-slate-400"
-                              : ""
-                        }
-                      >
-                        {userProfile.tier || "starter"}
+        <Card>
+          <CardHeader>
+            <CardTitle>User List</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {profiles && profiles.length > 0 ? (
+                profiles.map((profile) => (
+                  <div
+                    key={profile.id}
+                    className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50"
+                  >
+                    <div className="flex-1">
+                      <div className="font-medium text-gray-900">{profile.full_name || "No name"}</div>
+                      <div className="text-sm text-gray-500">
+                        {profile.age} years old • {profile.location || "No location"}
+                      </div>
+                      <div className="text-xs text-gray-400 mt-1">
+                        Joined: {new Date(profile.created_at).toLocaleDateString()}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge variant={profile.bio ? "default" : "secondary"}>
+                        {profile.bio ? "Complete" : "Incomplete"}
                       </Badge>
-                      {userProfile.is_admin && (
-                        <Badge variant="destructive" className="bg-rose-600">
-                          Admin
-                        </Badge>
-                      )}
                     </div>
-
-                    <div className="grid md:grid-cols-3 gap-4 text-sm text-gray-600">
-                      <div className="flex items-center gap-2">
-                        <Mail className="h-4 w-4" />
-                        {userProfile.id}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <MapPin className="h-4 w-4" />
-                        {userProfile.location || "Not specified"}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4" />
-                        Age: {userProfile.age || "N/A"}
-                      </div>
-                    </div>
-
-                    <div className="mt-3 text-sm">
-                      <span className="font-medium">Gender:</span> {userProfile.gender || "N/A"} |{" "}
-                      <span className="font-medium">Looking for:</span> {userProfile.looking_for || "N/A"}
-                    </div>
-
-                    {userProfile.bio && <p className="mt-3 text-sm text-gray-600 line-clamp-2">{userProfile.bio}</p>}
                   </div>
-
-                  <div className="flex gap-2 ml-4">
-                    <AdminUserActions userId={userProfile.id} isAdmin={userProfile.is_admin || false} />
-                    <Button asChild variant="outline" size="sm">
-                      <Link href={`/profile/${userProfile.id}`}>View Profile</Link>
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        {!users ||
-          (users.length === 0 && (
-            <Card>
-              <CardContent className="p-12 text-center text-gray-500">
-                <p>No users found</p>
-              </CardContent>
-            </Card>
-          ))}
+                ))
+              ) : (
+                <div className="text-center py-8 text-gray-500">No users found</div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   )

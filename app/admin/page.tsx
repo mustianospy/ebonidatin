@@ -1,13 +1,12 @@
-import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Users, Shield, DollarSign, AlertTriangle, Heart } from "lucide-react"
+import { createClient } from "@/lib/supabase/server"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Users, Heart, MessageCircle, Shield, Activity } from "lucide-react"
 
-export default async function AdminDashboard() {
+async function checkAdminAccess() {
   const supabase = await createClient()
-
   const {
     data: { user },
   } = await supabase.auth.getUser()
@@ -16,53 +15,55 @@ export default async function AdminDashboard() {
     redirect("/admin/login")
   }
 
-  // Check if user is admin
-  const { data: profile } = await supabase.from("profiles").select("is_admin").eq("id", user.id).single()
+  // Check if user is an admin
+  const { data: adminUser } = await supabase.from("admin_users").select("*").eq("user_id", user.id).single()
 
-  if (!profile?.is_admin) {
-    redirect("/dashboard")
+  if (!adminUser) {
+    redirect("/")
   }
 
-  // Fetch stats
-  const { count: totalUsers } = await supabase.from("profiles").select("*", { count: "exact", head: true })
+  return { user, adminUser }
+}
 
-  const { count: premiumUsers } = await supabase
-    .from("profiles")
-    .select("*", { count: "exact", head: true })
-    .in("tier", ["premium", "silver", "gold"])
+export default async function AdminDashboard() {
+  const { adminUser } = await checkAdminAccess()
 
-  const { count: pendingReports } = await supabase
-    .from("content_reports")
-    .select("*", { count: "exact", head: true })
-    .eq("status", "pending")
+  const supabase = await createClient()
 
-  const { data: recentPayments } = await supabase
-    .from("payments")
-    .select("amount")
-    .eq("status", "completed")
-    .gte("created_at", new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
-
-  const monthlyRevenue = recentPayments?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0
+  // Fetch statistics
+  const [{ count: totalUsers }, { count: totalProfiles }, { count: totalMatches }, { count: totalMessages }] =
+    await Promise.all([
+      supabase.from("profiles").select("*", { count: "exact", head: true }),
+      supabase.from("profiles").select("*", { count: "exact", head: true }).not("bio", "is", null),
+      supabase.from("matches").select("*", { count: "exact", head: true }),
+      supabase.from("messages").select("*", { count: "exact", head: true }),
+    ])
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-rose-50 via-amber-50 to-orange-50">
-      <nav className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
+    <div className="min-h-screen bg-gray-50">
+      {/* Admin Header */}
+      <header className="bg-white border-b sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Heart className="h-8 w-8 text-rose-600 fill-rose-600" />
-            <span className="text-2xl font-bold bg-gradient-to-r from-rose-600 to-orange-600 bg-clip-text text-transparent">
-              Eboni Dating Admin
-            </span>
+            <Shield className="h-6 w-6 text-cyan-600" />
+            <span className="text-xl font-bold">Eboni Dating Admin</span>
           </div>
-          <Button asChild variant="outline">
-            <Link href="/dashboard">Back to Site</Link>
-          </Button>
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-gray-600">{adminUser.role === "super_admin" ? "Super Admin" : "Admin"}</span>
+            <Button variant="outline" asChild>
+              <Link href="/">View Site</Link>
+            </Button>
+          </div>
         </div>
-      </nav>
+      </header>
 
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-4xl font-bold mb-8">Admin Dashboard</h1>
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
+          <p className="text-gray-600">Manage users, content, and platform settings</p>
+        </div>
 
+        {/* Statistics Grid */}
         <div className="grid md:grid-cols-4 gap-6 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -70,110 +71,81 @@ export default async function AdminDashboard() {
               <Users className="h-4 w-4 text-gray-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{totalUsers || 0}</div>
+              <div className="text-2xl font-bold">{totalUsers || 0}</div>
+              <p className="text-xs text-gray-500 mt-1">Registered accounts</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">Premium Users</CardTitle>
-              <Shield className="h-4 w-4 text-gray-600" />
+              <CardTitle className="text-sm font-medium text-gray-600">Active Profiles</CardTitle>
+              <Heart className="h-4 w-4 text-gray-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{premiumUsers || 0}</div>
+              <div className="text-2xl font-bold">{totalProfiles || 0}</div>
+              <p className="text-xs text-gray-500 mt-1">Completed profiles</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">Monthly Revenue</CardTitle>
-              <DollarSign className="h-4 w-4 text-gray-600" />
+              <CardTitle className="text-sm font-medium text-gray-600">Total Matches</CardTitle>
+              <Activity className="h-4 w-4 text-gray-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">${(monthlyRevenue / 100).toFixed(2)}</div>
+              <div className="text-2xl font-bold">{totalMatches || 0}</div>
+              <p className="text-xs text-gray-500 mt-1">Successful connections</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">Pending Reports</CardTitle>
-              <AlertTriangle className="h-4 w-4 text-gray-600" />
+              <CardTitle className="text-sm font-medium text-gray-600">Messages Sent</CardTitle>
+              <MessageCircle className="h-4 w-4 text-gray-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{pendingReports || 0}</div>
+              <div className="text-2xl font-bold">{totalMessages || 0}</div>
+              <p className="text-xs text-gray-500 mt-1">Total conversations</p>
             </CardContent>
           </Card>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Quick Actions */}
+        <div className="grid md:grid-cols-3 gap-6">
           <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-            <Link href="/admin/users">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5" />
-                  User Management
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-600">View, edit, and manage user accounts</p>
-              </CardContent>
-            </Link>
+            <CardHeader>
+              <CardTitle>User Management</CardTitle>
+              <CardDescription>View and manage all registered users</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button asChild className="w-full">
+                <Link href="/admin/users">Manage Users</Link>
+              </Button>
+            </CardContent>
           </Card>
 
           <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-            <Link href="/admin/moderation">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <AlertTriangle className="h-5 w-5" />
-                  Content Moderation
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-600">Review reported content and profiles</p>
-              </CardContent>
-            </Link>
+            <CardHeader>
+              <CardTitle>Content Moderation</CardTitle>
+              <CardDescription>Review reported content and profiles</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button asChild className="w-full">
+                <Link href="/admin/reports">View Reports</Link>
+              </Button>
+            </CardContent>
           </Card>
 
           <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-            <Link href="/admin/payments">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <DollarSign className="h-5 w-5" />
-                  Payments & Subscriptions
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-600">Manage payments and tier upgrades</p>
-              </CardContent>
-            </Link>
-          </Card>
-
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-            <Link href="/admin/analytics">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Shield className="h-5 w-5" />
-                  Analytics
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-600">View platform statistics and insights</p>
-              </CardContent>
-            </Link>
-          </Card>
-
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-            <Link href="/admin/logs">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Shield className="h-5 w-5" />
-                  Audit Logs
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-600">View admin action history</p>
-              </CardContent>
-            </Link>
+            <CardHeader>
+              <CardTitle>Platform Settings</CardTitle>
+              <CardDescription>Configure app settings and features</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button asChild className="w-full">
+                <Link href="/admin/settings">Settings</Link>
+              </Button>
+            </CardContent>
           </Card>
         </div>
       </div>
