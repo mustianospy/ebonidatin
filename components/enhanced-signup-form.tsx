@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { getCountries, getCitiesByCountry } from "@/lib/countries-data"
-import { Loader2 } from "lucide-react"
+import { Loader2, Mail } from "lucide-react"
 
 export function EnhancedSignupForm() {
   const [email, setEmail] = useState("")
@@ -64,13 +64,14 @@ export function EnhancedSignupForm() {
     try {
       const supabase = createClient()
 
+      const redirectUrl = process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${window.location.origin}/auth/callback`
+
       // Sign up the user
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo:
-            process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${window.location.origin}/auth/callback`,
+          emailRedirectTo: redirectUrl,
           data: {
             full_name: fullName,
             phone,
@@ -102,13 +103,14 @@ export function EnhancedSignupForm() {
 
         if (profileError) {
           console.error("[v0] Profile creation error:", profileError)
+          throw new Error("Failed to create profile. Please try again.")
         }
 
         setSuccess(true)
       }
     } catch (err: any) {
       console.error("[v0] Signup error:", err)
-      setError(err.message || "An error occurred during sign up")
+      setError(err.message || "An error occurred during sign up. Please try again.")
     } finally {
       setLoading(false)
     }
@@ -118,16 +120,28 @@ export function EnhancedSignupForm() {
     return (
       <Card className="w-full max-w-md mx-auto">
         <CardHeader>
-          <CardTitle>Check Your Email</CardTitle>
+          <div className="flex items-center gap-2 mb-2">
+            <Mail className="h-5 w-5 text-amber-600" />
+            <CardTitle>Check Your Email</CardTitle>
+          </div>
           <CardDescription>We've sent a verification link to {email}</CardDescription>
         </CardHeader>
-        <CardContent>
-          <Alert>
-            <AlertDescription>
-              Please check your email and click the verification link to activate your account. You must verify your
-              email before you can log in.
+        <CardContent className="space-y-4">
+          <Alert className="bg-amber-50 border-amber-200">
+            <AlertDescription className="text-amber-900">
+              <strong>Important:</strong> Please check your email inbox (and spam folder) for a verification link from
+              Eboni Dating. You must verify your email before you can log in.
             </AlertDescription>
           </Alert>
+          <div className="text-sm text-muted-foreground space-y-2">
+            <p>The verification link will expire in 24 hours.</p>
+            <p>
+              Didn't receive the email?{" "}
+              <button onClick={() => setSuccess(false)} className="text-amber-600 hover:underline font-medium">
+                Try signing up again
+              </button>
+            </p>
+          </div>
         </CardContent>
       </Card>
     )
@@ -137,7 +151,7 @@ export function EnhancedSignupForm() {
     <Card className="w-full max-w-2xl mx-auto">
       <CardHeader>
         <CardTitle>Create Your Account</CardTitle>
-        <CardDescription>Join our dating community today</CardDescription>
+        <CardDescription>Join the Eboni Dating community today</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSignUp} className="space-y-4">
@@ -275,7 +289,7 @@ export function EnhancedSignupForm() {
             </div>
           </div>
 
-          <Button type="submit" className="w-full" disabled={loading}>
+          <Button type="submit" className="w-full bg-amber-600 hover:bg-amber-700" disabled={loading}>
             {loading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -288,7 +302,7 @@ export function EnhancedSignupForm() {
 
           <p className="text-sm text-center text-muted-foreground">
             Already have an account?{" "}
-            <a href="/auth/login" className="text-primary hover:underline">
+            <a href="/auth/login" className="text-amber-600 hover:underline font-medium">
               Log in
             </a>
           </p>

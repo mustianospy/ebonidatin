@@ -22,17 +22,22 @@ export default function AuthCallbackPage() {
         const accessToken = hashParams.get("access_token")
         const type = hashParams.get("type")
 
+        console.log("[v0] Callback params:", { type, hasToken: !!accessToken })
+
         if (type === "signup" && accessToken) {
           // Update the user's email_verified status in profiles
           const {
             data: { user },
           } = await supabase.auth.getUser()
 
+          console.log("[v0] User from callback:", user?.id)
+
           if (user) {
             const { error } = await supabase.from("profiles").update({ email_verified: true }).eq("id", user.id)
 
             if (error) {
               console.error("[v0] Error updating email verification:", error)
+              throw new Error("Failed to verify email. Please try again.")
             }
 
             setStatus("success")
@@ -42,15 +47,17 @@ export default function AuthCallbackPage() {
             setTimeout(() => {
               router.push("/dashboard")
             }, 2000)
+          } else {
+            throw new Error("User not found")
           }
         } else {
           setStatus("error")
-          setMessage("Invalid verification link")
+          setMessage("Invalid or expired verification link")
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error("[v0] Verification error:", error)
         setStatus("error")
-        setMessage("An error occurred during verification")
+        setMessage(error.message || "An error occurred during verification")
       }
     }
 
@@ -58,11 +65,11 @@ export default function AuthCallbackPage() {
   }, [router])
 
   return (
-    <div className="flex min-h-screen w-full items-center justify-center p-6 bg-gradient-to-b from-cyan-50 to-white">
+    <div className="flex min-h-screen w-full items-center justify-center p-6 bg-gradient-to-b from-amber-50 to-white">
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            {status === "loading" && <Loader2 className="h-5 w-5 animate-spin" />}
+            {status === "loading" && <Loader2 className="h-5 w-5 animate-spin text-amber-600" />}
             {status === "success" && <CheckCircle className="h-5 w-5 text-green-600" />}
             {status === "error" && <XCircle className="h-5 w-5 text-red-600" />}
             Email Verification
@@ -70,8 +77,11 @@ export default function AuthCallbackPage() {
           <CardDescription>{message}</CardDescription>
         </CardHeader>
         {status === "error" && (
-          <CardContent>
-            <Button onClick={() => router.push("/auth/login")} className="w-full">
+          <CardContent className="space-y-2">
+            <Button onClick={() => router.push("/auth/sign-up")} className="w-full bg-amber-600 hover:bg-amber-700">
+              Sign Up Again
+            </Button>
+            <Button onClick={() => router.push("/auth/login")} variant="outline" className="w-full">
               Go to Login
             </Button>
           </CardContent>
