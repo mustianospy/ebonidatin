@@ -10,14 +10,13 @@ export const metadata: Metadata = {
 
 export default function PrivacyPage() {
   return (
-    <div className="min-h-screen bg-white">
-      <header className="border-b">
+    <div className="min-h-screen bg-gradient-to-b from-purple-900 to-black text-white">
+      <header className="border-b border-white/20">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <Heart className="h-6 w-6 text-cyan-600 fill-cyan-600" />
-            <span className="text-xl font-bold text-gray-900">Eboni Dating</span>
+            <span className="text-2xl font-bold text-yellow-400">Eboni Dating</span>
           </Link>
-          <Button variant="ghost" asChild>
+          <Button variant="ghost" asChild className="text-white hover:bg-white/10">
             <Link href="/">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Home
@@ -27,16 +26,16 @@ export default function PrivacyPage() {
       </header>
 
       <div className="container mx-auto px-4 py-12 max-w-4xl">
-        <h1 className="text-4xl font-bold text-gray-900 mb-6">Privacy Policy</h1>
-        <p className="text-gray-600 mb-8">Last updated: {new Date().toLocaleDateString()}</p>
+        <h1 className="text-4xl font-bold text-white mb-6">Privacy Policy</h1>
+        <p className="text-gray-300 mb-8">Last updated: {new Date().toLocaleDateString()}</p>
 
-        <div className="prose prose-gray max-w-none space-y-6">
+        <div className="prose prose-invert max-w-none space-y-6">
           <section>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">1. Information We Collect</h2>
-            <p className="text-gray-700 leading-relaxed mb-4">
+            <h2 className="text-2xl font-bold text-white mb-4">1. Information We Collect</h2>
+            <p className="text-gray-300 leading-relaxed mb-4">
               We collect information that you provide directly to us:
             </p>
-            <ul className="list-disc pl-6 space-y-2 text-gray-700">
+            <ul className="list-disc pl-6 space-y-2 text-gray-300">
               <li>Profile information (name, age, location, photos, bio)</li>
               <li>Account credentials (email, password)</li>
               <li>Communication data (messages, likes, matches)</li>
@@ -45,9 +44,9 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">2. How We Use Your Information</h2>
-            <p className="text-gray-700 leading-relaxed mb-4">We use your information to:</p>
-            <ul className="list-disc pl-6 space-y-2 text-gray-700">
+            <h2 className="text-2xl font-bold text-white mb-4">2. How We Use Your Information</h2>
+            <p className="text-gray-300 leading-relaxed mb-4">We use your information to:</p>
+            <ul className="list-disc pl-6 space-y-2 text-gray-300">
               <li>Provide and improve our dating services</li>
               <li>Match you with compatible users</li>
               <li>Communicate with you about your account</li>
@@ -57,17 +56,17 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">3. Data Security</h2>
-            <p className="text-gray-700 leading-relaxed">
+            <h2 className="text-2xl font-bold text-white mb-4">3. Data Security</h2>
+            <p className="text-gray-300 leading-relaxed">
               We implement industry-standard security measures to protect your personal information. All data is
               encrypted in transit and at rest. We use secure authentication and regularly audit our security practices.
             </p>
           </section>
 
           <section>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">4. Your Rights</h2>
-            <p className="text-gray-700 leading-relaxed mb-4">You have the right to:</p>
-            <ul className="list-disc pl-6 space-y-2 text-gray-700">
+            <h2 className="text-2xl font-bold text-white mb-4">4. Your Rights</h2>
+            <p className="text-gray-300 leading-relaxed mb-4">You have the right to:</p>
+            <ul className="list-disc pl-6 space-y-2 text-gray-300">
               <li>Access your personal data</li>
               <li>Correct inaccurate information</li>
               <li>Request deletion of your account and data</li>
@@ -77,10 +76,10 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">5. Contact Us</h2>
-            <p className="text-gray-700 leading-relaxed">
+            <h2 className="text-2xl font-bold text-white mb-4">5. Contact Us</h2>
+            <p className="text-gray-300 leading-relaxed">
               For privacy-related questions or requests, contact us at{" "}
-              <a href="mailto:privacy@ebonidating.com" className="text-cyan-600 hover:text-cyan-700">
+              <a href="mailto:privacy@ebonidating.com" className="text-yellow-400 hover:text-yellow-300">
                 privacy@ebonidating.com
               </a>
             </p>
