@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { Heart, User, MessageCircle, Settings, LogOut, MapPin } from "lucide-react"
+import { Heart, User, MessageCircle, Settings, LogOut, MapPin, Video } from "lucide-react"
 import Link from "next/link"
 
 interface Profile {
@@ -200,6 +200,30 @@ export default function DashboardContent({ profile }: DashboardContentProps) {
                       </div>
                       <h3 className="font-semibold mb-1">Matches</h3>
                       <p className="text-sm text-muted-foreground">View your matches</p>
+                    </CardContent>
+                  </Link>
+                </Card>
+
+                <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+                  <Link href="/dashboard/posts">
+                    <CardContent className="p-6 text-center">
+                      <div className="h-12 w-12 rounded-full bg-pink-100 flex items-center justify-center mx-auto mb-3">
+                        <Video className="h-6 w-6 text-pink-600" />
+                      </div>
+                      <h3 className="font-semibold mb-1">Video Posts</h3>
+                      <p className="text-sm text-muted-foreground">Share your moments</p>
+                    </CardContent>
+                  </Link>
+                </Card>
+
+                <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+                  <Link href="/messages">
+                    <CardContent className="p-6 text-center">
+                      <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-3">
+                        <MessageCircle className="h-6 w-6 text-green-600" />
+                      </div>
+                      <h3 className="font-semibold mb-1">Messages</h3>
+                      <p className="text-sm text-muted-foreground">Chat with matches</p>
                     </CardContent>
                   </Link>
                 </Card>

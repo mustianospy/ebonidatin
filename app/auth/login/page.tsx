@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
@@ -26,11 +27,31 @@ export default function LoginPage() {
     setError(null)
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
       if (error) throw error
+
+      if (data.user) {
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles")
+          .select("email_verified")
+          .eq("id", data.user.id)
+          .single()
+
+        if (profileError) {
+          console.error("[v0] Error fetching profile:", profileError)
+        }
+
+        if (profile && !profile.email_verified) {
+          await supabase.auth.signOut()
+          setError("Please verify your email before logging in. Check your inbox for the verification link.")
+          setIsLoading(false)
+          return
+        }
+      }
+
       router.push("/dashboard")
       router.refresh()
     } catch (error: unknown) {
@@ -82,7 +103,9 @@ export default function LoginPage() {
                     />
                   </div>
                   {error && (
-                    <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">{error}</div>
+                    <Alert variant="destructive">
+                      <AlertDescription>{error}</AlertDescription>
+                    </Alert>
                   )}
                   <Button type="submit" className="w-full bg-cyan-600 hover:bg-cyan-700" disabled={isLoading}>
                     {isLoading ? "Signing in..." : "Sign In"}

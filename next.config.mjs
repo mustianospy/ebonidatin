@@ -28,10 +28,6 @@ const nextConfig = {
             value: "on",
           },
           {
-            key: "Strict-Transport-Security",
-            value: "max-age=63072000; includeSubDomains; preload",
-          },
-          {
             key: "X-Frame-Options",
             value: "SAMEORIGIN",
           },
@@ -52,21 +48,6 @@ const nextConfig = {
             value: "camera=(), microphone=(), geolocation=()",
           },
         ],
-      },
-    ]
-  },
-  async redirects() {
-    return [
-      {
-        source: "/:path*",
-        has: [
-          {
-            type: "host",
-            value: "www.ebonidating.com",
-          },
-        ],
-        destination: "https://ebonidating.com/:path*",
-        permanent: true,
       },
     ]
   },
