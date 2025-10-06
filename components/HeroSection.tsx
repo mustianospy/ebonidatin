@@ -1,45 +1,45 @@
-import EmblaCarousel from './EmblaCarousel'
-import { useTranslations } from '@/lib/i18n/use-translations'
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-
-export default function HeroSection() {
-  const { t } = useTranslations()
-
+export function HeroSection() {
   return (
-    <section className="relative flex flex-col justify-center items-center min-h-[500px] bg-black">
-      <div className="absolute inset-0 w-full h-full">
-        <EmblaCarousel
-          images={[
-            '/couple1.jpg',
-            '/couple2.jpg',
-            '/couple3.jpg',
-            '/couple4.jpg',
-            '/couple5.jpg',
-          ]}
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 to-black/80" />
-      </div>
-      <div className="relative z-10 max-w-2xl w-full px-6 py-12 text-center">
-        <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-          {t.home.title}
+    <section className="min-h-screen flex items-center justify-center bg-gradient-to-br from-amber-900 to-rose-900 text-white py-12 px-4 sm:px-6 lg:px-8">
+      <div className="w-full max-w-7xl mx-auto text-center">
+        {/* Main Heading - Responsive sizing */}
+        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 md:mb-6 leading-tight">
+          Find Authentic <span className="text-amber-300 block md:inline">Black Love</span>
         </h1>
-        <p className="text-lg md:text-xl text-white mb-8">{t.home.subtitle}</p>
-        <form className="flex flex-col md:flex-row justify-center items-center gap-2 bg-black/60 p-4 rounded-lg w-full max-w-xl mx-auto">
-          <input className="px-4 py-2 rounded bg-white/80 text-black" placeholder="Name" required />
-          <input className="px-4 py-2 rounded bg-white/80 text-black" placeholder="Age" type="number" required />
-          <input className="px-4 py-2 rounded bg-white/80 text-black" placeholder="Email" type="email" required />
-          <select className="px-4 py-2 rounded bg-white/80 text-black" required>
-            <option value="">I'm a...</option>
-            <option value="man">Man</option>
-            <option value="woman">Woman</option>
-            <option value="other">Other</option>
-          </select>
-          <button className="bg-yellow-600 text-white font-bold px-6 py-2 rounded hover:bg-yellow-700 transition">
-            {t.home.cta}
+        
+        {/* Subtitle - Responsive text */}
+        <p className="text-lg sm:text-xl md:text-2xl mb-6 md:mb-8 max-w-4xl mx-auto leading-relaxed px-4">
+          Join thousands of Black singles in a culturally-rich community that celebrates our heritage.
+        </p>
+        
+        {/* Trust Badges - Responsive grid */}
+        <div className="flex flex-wrap justify-center gap-3 sm:gap-4 md:gap-6 mb-8 px-4">
+          {[
+            { icon: 'ShieldCheck', text: 'Verified Members' },
+            { icon: 'Heart', text: 'Cultural Matching' },
+            { icon: 'Users', text: 'Safe & Inclusive' }
+          ].map((item, index) => (
+            <div key={index} className="flex items-center gap-2 bg-black/30 px-3 py-2 sm:px-4 sm:py-2 rounded-full text-sm sm:text-base">
+              <span>{item.text}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* CTA Buttons - Responsive layout */}
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center px-4">
+          <button className="w-full sm:w-auto bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 px-6 sm:py-4 sm:px-8 rounded-full text-base sm:text-lg transition-all transform hover:scale-105 min-h-[50px] flex items-center justify-center">
+            Join Free Today
           </button>
-        </form>
+          <button className="w-full sm:w-auto border-2 border-white hover:bg-white hover:text-amber-900 text-white font-bold py-3 px-6 sm:py-4 sm:px-8 rounded-full text-base sm:text-lg transition-all min-h-[50px] flex items-center justify-center">
+            See Success Stories
+          </button>
+        </div>
+        
+        {/* Footer text */}
+        <p className="mt-6 text-amber-200 text-sm sm:text-base px-4">
+          LGBTQ+ inclusive • Privacy focused • Community driven
+        </p>
       </div>
     </section>
-  )
+  );
 }
