@@ -2,166 +2,202 @@
 
 import type React from "react"
 
-import { useState, useEffect, useRef } from "react"
+import { useEffect, useState, useRef } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { TierBadge } from "@/components/tier-badge"
-import { TierPermissions } from "@/components/tier-permissions"
-import { Send, Phone, Video } from "lucide-react"
-import { cn } from "@/lib/utils"
-
-interface Profile {
-  id: string
-  display_name: string
-  profile_image_url?: string
-  tier: string
-}
+import { Button } from "@/components/ui/button"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Send, Video, Loader2 } from "lucide-react"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 interface Message {
   id: string
-  content: string
   sender_id: string
+  receiver_id: string
+  message: string
+  read: boolean
   created_at: string
-  is_read: boolean
 }
 
-interface Conversation {
+interface Profile {
   id: string
-  participant_1: Profile
-  participant_2: Profile
+  full_name: string | null
+  display_name: string | null
 }
 
 interface ChatInterfaceProps {
-  conversation: Conversation
-  messages: Message[]
   currentUserId: string
-  currentUserTier: string
-  otherParticipant: Profile
+  otherUserId: string
+  otherUserProfile: Profile
+  onVideoCall?: () => void
 }
 
-export function ChatInterface({
-  conversation,
-  messages: initialMessages,
-  currentUserId,
-  currentUserTier,
-  otherParticipant,
-}: ChatInterfaceProps) {
-  const [messages, setMessages] = useState(initialMessages)
+export function ChatInterface({ currentUserId, otherUserId, otherUserProfile, onVideoCall }: ChatInterfaceProps) {
+  const [messages, setMessages] = useState<Message[]>([])
   const [newMessage, setNewMessage] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
-  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const [loading, setLoading] = useState(true)
+  const [sending, setSending] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const scrollRef = useRef<HTMLDivElement>(null)
   const supabase = createClient()
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  }
+  useEffect(() => {
+    fetchMessages()
+
+    // Subscribe to new messages
+    const channel = supabase
+      .channel("chat_messages")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "chat_messages",
+          filter: `sender_id=eq.${otherUserId},receiver_id=eq.${currentUserId}`,
+        },
+        (payload) => {
+          setMessages((prev) => [...prev, payload.new as Message])
+          scrollToBottom()
+        },
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [currentUserId, otherUserId])
 
   useEffect(() => {
     scrollToBottom()
   }, [messages])
 
-  const sendMessage = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!newMessage.trim() || isLoading) return
-
-    setIsLoading(true)
-    try {
-      const { data, error } = await supabase
-        .from("messages")
-        .insert({
-          conversation_id: conversation.id,
-          sender_id: currentUserId,
-          content: newMessage.trim(),
-        })
-        .select()
-        .single()
-
-      if (error) throw error
-
-      setMessages((prev) => [...prev, data])
-      setNewMessage("")
-
-      // Update conversation last_message_at
-      await supabase
-        .from("conversations")
-        .update({ last_message_at: new Date().toISOString() })
-        .eq("id", conversation.id)
-    } catch (error) {
-      console.error("Error sending message:", error)
-    } finally {
-      setIsLoading(false)
+  const scrollToBottom = () => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
     }
   }
 
-  const initiateCall = async (callType: "voice" | "video") => {
+  const fetchMessages = async () => {
     try {
-      const { error } = await supabase.from("calls").insert({
-        conversation_id: conversation.id,
-        caller_id: currentUserId,
-        receiver_id: otherParticipant.id,
-        call_type: callType,
-      })
+      const { data, error } = await supabase
+        .from("chat_messages")
+        .select("*")
+        .or(
+          `and(sender_id.eq.${currentUserId},receiver_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},receiver_id.eq.${currentUserId})`,
+        )
+        .order("created_at", { ascending: true })
 
       if (error) throw error
 
-      // In a real app, you would integrate with WebRTC or a calling service
-      alert(`${callType === "voice" ? "Voice" : "Video"} call initiated! (This is a demo)`)
-    } catch (error) {
-      console.error("Error initiating call:", error)
+      setMessages(data || [])
+    } catch (err) {
+      console.error("[v0] Error fetching messages:", err)
+      setError("Failed to load messages")
+    } finally {
+      setLoading(false)
     }
+  }
+
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newMessage.trim() || sending) return
+
+    setSending(true)
+    setError(null)
+
+    try {
+      const response = await fetch("/api/send-message", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          receiver_id: otherUserId,
+          message: newMessage.trim(),
+        }),
+      })
+
+      if (!response.ok) throw new Error("Failed to send message")
+
+      const { message } = await response.json()
+      setMessages((prev) => [...prev, message])
+      setNewMessage("")
+      scrollToBottom()
+    } catch (err) {
+      console.error("[v0] Error sending message:", err)
+      setError("Failed to send message")
+    } finally {
+      setSending(false)
+    }
+  }
+
+  const getInitials = (name: string | null) => {
+    if (!name) return "U"
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2)
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-cyan-600" />
+      </div>
+    )
   }
 
   return (
-    <TierPermissions userTier={currentUserTier}>
-      {(permissions) => (
-        <Card className="h-[600px] flex flex-col">
-          <CardHeader className="flex-shrink-0 border-b">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Avatar>
-                  <AvatarImage src={otherParticipant.profile_image_url || "/placeholder.svg"} />
-                  <AvatarFallback>{otherParticipant.display_name.charAt(0)}</AvatarFallback>
-                </Avatar>
-                <div>
-                  <CardTitle className="text-lg">{otherParticipant.display_name}</CardTitle>
-                  <TierBadge tier={otherParticipant.tier} size="sm" />
-                </div>
-              </div>
-              <div className="flex gap-2">
-                {permissions.can_voice_call && (
-                  <Button variant="outline" size="sm" onClick={() => initiateCall("voice")}>
-                    <Phone className="w-4 h-4" />
-                  </Button>
-                )}
-                {permissions.can_video_call && (
-                  <Button variant="outline" size="sm" onClick={() => initiateCall("video")}>
-                    <Video className="w-4 h-4" />
-                  </Button>
-                )}
-              </div>
-            </div>
-          </CardHeader>
+    <Card className="flex flex-col h-[600px]">
+      <CardHeader className="border-b">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Avatar>
+              <AvatarFallback className="bg-cyan-100 text-cyan-600">
+                {getInitials(otherUserProfile.display_name || otherUserProfile.full_name)}
+              </AvatarFallback>
+            </Avatar>
+            <CardTitle className="text-lg">
+              {otherUserProfile.display_name || otherUserProfile.full_name || "User"}
+            </CardTitle>
+          </div>
+          {onVideoCall && (
+            <Button onClick={onVideoCall} size="sm" className="gap-2">
+              <Video className="h-4 w-4" />
+              Video Call
+            </Button>
+          )}
+        </div>
+      </CardHeader>
 
-          <CardContent className="flex-1 overflow-y-auto p-4">
-            <div className="space-y-4">
-              {messages.map((message) => {
-                const isOwnMessage = message.sender_id === currentUserId
+      <CardContent className="flex-1 flex flex-col p-0">
+        {error && (
+          <div className="p-4">
+            <Alert variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          </div>
+        )}
+
+        <ScrollArea className="flex-1 p-4" ref={scrollRef}>
+          <div className="space-y-4">
+            {messages.length === 0 ? (
+              <div className="text-center text-muted-foreground py-8">No messages yet. Start the conversation!</div>
+            ) : (
+              messages.map((msg) => {
+                const isSender = msg.sender_id === currentUserId
                 return (
-                  <div key={message.id} className={cn("flex", isOwnMessage ? "justify-end" : "justify-start")}>
+                  <div key={msg.id} className={`flex ${isSender ? "justify-end" : "justify-start"}`}>
                     <div
-                      className={cn(
-                        "max-w-xs lg:max-w-md px-4 py-2 rounded-lg",
-                        isOwnMessage
-                          ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
-                          : "bg-gray-100 text-gray-900",
-                      )}
+                      className={`max-w-[70%] rounded-lg px-4 py-2 ${
+                        isSender ? "bg-cyan-600 text-white" : "bg-gray-100 text-gray-900"
+                      }`}
                     >
-                      <p className="text-sm">{message.content}</p>
-                      <p className={cn("text-xs mt-1", isOwnMessage ? "text-purple-100" : "text-gray-500")}>
-                        {new Date(message.created_at).toLocaleTimeString([], {
+                      <p className="text-sm">{msg.message}</p>
+                      <p className={`text-xs mt-1 ${isSender ? "text-cyan-100" : "text-gray-500"}`}>
+                        {new Date(msg.created_at).toLocaleTimeString([], {
                           hour: "2-digit",
                           minute: "2-digit",
                         })}
@@ -169,27 +205,25 @@ export function ChatInterface({
                     </div>
                   </div>
                 )
-              })}
-              <div ref={messagesEndRef} />
-            </div>
-          </CardContent>
-
-          <div className="flex-shrink-0 border-t p-4">
-            <form onSubmit={sendMessage} className="flex gap-2">
-              <Input
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                placeholder="Type a message..."
-                disabled={isLoading}
-                className="flex-1"
-              />
-              <Button type="submit" disabled={isLoading || !newMessage.trim()}>
-                <Send className="w-4 h-4" />
-              </Button>
-            </form>
+              })
+            )}
           </div>
-        </Card>
-      )}
-    </TierPermissions>
+        </ScrollArea>
+
+        <form onSubmit={handleSendMessage} className="p-4 border-t">
+          <div className="flex gap-2">
+            <Input
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              placeholder="Type a message..."
+              disabled={sending}
+            />
+            <Button type="submit" disabled={sending || !newMessage.trim()} size="icon">
+              {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+            </Button>
+          </div>
+        </form>
+      </CardContent>
+    </Card>
   )
 }

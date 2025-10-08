@@ -1,164 +1,248 @@
-import { createClient } from "@/lib/supabase/server"
-import { redirect } from "next/navigation"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Heart, Video, Users, MessageCircle, Sparkles } from "lucide-react"
+"use client";
+import Image from "next/image";
+import { useState, useRef, useEffect } from "react";
+import { createClient } from "@/lib/supabase/client";
 
-export default async function HomePage() {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+// List your images here (make sure they exist in /public)
+const sliderImages = [
+  "/community1.jpg",
+  "/community2.jpg",
+  "/community3.jpg",
+];
 
-  if (user) {
-    redirect("/dashboard")
-  }
+export default function Home() {
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const slideInterval = useRef<NodeJS.Timeout | null>(null);
+  const [formState, setFormState] = useState({ error: null, success: null });
+  const supabase = createClient();
+
+  // Auto-slide every 3 seconds
+  useEffect(() => {
+    slideInterval.current = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % sliderImages.length);
+    }, 3000);
+    return () => {
+      if (slideInterval.current) clearInterval(slideInterval.current);
+    };
+  }, []);
+
+  // Handle signup form submit
+  const handleSignup = async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const name = form.name.value;
+    const age = form.age.value;
+    const email = form.email.value;
+    const gender = form.gender.value;
+
+    // Optional: Add further validation here
+    if (!name || !age || !email || !gender) {
+      setFormState({ error: "All fields are required.", success: null });
+      return;
+    }
+
+    // Insert into Supabase (adjust table/fields as needed)
+    const { error } = await supabase
+      .from("profiles")
+      .insert([
+        {
+          full_name: name,
+          email,
+          gender,
+          // Convert age to date_of_birth if needed
+          date_of_birth: `19${new Date().getFullYear() - age}-01-01`, // crude conversion
+        },
+      ]);
+    if (error) {
+      setFormState({ error: "Signup failed. Please try again.", success: null });
+    } else {
+      setFormState({ error: null, success: "Signup successful! Please check your email." });
+      form.reset();
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-teal-50 to-cyan-50">
-      <nav className="border-b bg-white/90 backdrop-blur-md sticky top-0 z-50 shadow-sm">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Heart className="h-8 w-8 text-primary fill-primary" />
-            <span className="text-2xl font-bold text-primary">Eboni Dating</span>
+    <main className="bg-gray-900 text-white min-h-screen">
+      {/* Image Slider */}
+      <section className="relative w-full h-[280px] sm:h-[400px] md:h-[500px] mb-8 overflow-hidden">
+        {sliderImages.map((src, i) => (
+          <div
+            key={src}
+            className={`absolute inset-0 transition-opacity duration-700 ${i === currentSlide ? "opacity-100 z-10" : "opacity-0 z-0"}`}
+            aria-hidden={i !== currentSlide}
+          >
+            <Image
+              src={src}
+              alt={`Community slide ${i + 1}`}
+              fill
+              priority={i === currentSlide}
+              sizes="100vw"
+              className="object-cover w-full h-full"
+            />
           </div>
-          <div className="flex gap-3">
-            <Button asChild variant="ghost">
-              <Link href="/auth/login">Sign In</Link>
-            </Button>
-            <Button asChild className="bg-primary hover:bg-primary/90">
-              <Link href="/auth/signup">Join Now</Link>
-            </Button>
-          </div>
+        ))}
+        {/* Slider dots */}
+        <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
+          {sliderImages.map((_, i) => (
+            <button
+              key={i}
+              aria-label={`Go to slide ${i + 1}`}
+              className={`w-3 h-3 rounded-full ${i === currentSlide ? "bg-yellow-500" : "bg-gray-600"} transition`}
+              onClick={() => setCurrentSlide(i)}
+            />
+          ))}
         </div>
-      </nav>
+      </section>
 
-      <div className="container mx-auto px-4 py-20">
-        <div className="text-center max-w-4xl mx-auto">
-          <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full mb-6 text-sm font-medium">
-            <Sparkles className="h-4 w-4" />
-            Trusted LGBTQ+ Dating Platform
-          </div>
-          <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
-            Find Meaningful Connections on Eboni Dating
-          </h1>
-          <p className="text-xl text-gray-700 mb-10 leading-relaxed max-w-2xl mx-auto">
-            Join thousands of LGBTQ+ individuals finding love, friendship, and authentic connections in a safe,
-            inclusive environment designed for you.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button asChild size="lg" className="bg-primary hover:bg-primary/90 h-14 px-10 text-lg">
-              <Link href="/auth/signup">Get Started Free</Link>
-            </Button>
-            <Button asChild variant="outline" size="lg" className="h-14 px-10 text-lg border-2 bg-transparent">
-              <Link href="/auth/login">Sign In</Link>
-            </Button>
-          </div>
-          <p className="text-sm text-gray-600 mt-4">Free to join • No credit card required • 18+ only</p>
-        </div>
+      {/* Hero Section */}
+      <section className="container mx-auto px-4 py-16 text-center">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold leading-tight mb-6 text-yellow-500">
+          Find Love, Build Connections, Celebrate Black Love
+        </h1>
+        <p className="text-gray-300 text-sm sm:text-base md:text-lg max-w-2xl mx-auto mb-8">
+          Join thousands of singles connecting every day on Eboni Dating. Where real love meets authenticity.
+        </p>
+        {/* Signup Form */}
+        <form className="flex flex-col sm:flex-row justify-center items-center gap-3 max-w-2xl mx-auto"
+          onSubmit={handleSignup}
+          aria-label="Signup form"
+        >
+          <input
+            type="text"
+            name="name"
+            placeholder="Name"
+            required
+            aria-label="Name"
+            className="w-full sm:w-auto flex-1 rounded-lg p-3 text-gray-900 focus:ring-2 focus:ring-yellow-500"
+          />
+          <input
+            type="number"
+            name="age"
+            min="18"
+            max="100"
+            placeholder="Age"
+            required
+            aria-label="Age"
+            className="w-full sm:w-auto flex-1 rounded-lg p-3 text-gray-900 focus:ring-2 focus:ring-yellow-500"
+          />
+          <input
+            type="email"
+            name="email"
+            placeholder="Email"
+            required
+            aria-label="Email"
+            className="w-full sm:w-auto flex-1 rounded-lg p-3 text-gray-900 focus:ring-2 focus:ring-yellow-500"
+          />
+          <select
+            name="gender"
+            required
+            aria-label="Gender"
+            className="w-full sm:w-auto flex-1 rounded-lg p-3 text-gray-900 focus:ring-2 focus:ring-yellow-500"
+          >
+            <option value="">I'm a...</option>
+            <option value="man">Man Seeking Woman</option>
+            <option value="woman">Woman Seeking Man</option>
+            <option value="other">Other</option>
+          </select>
+          <button
+            type="submit"
+            className="w-full sm:w-auto bg-yellow-600 hover:bg-yellow-500 text-white font-semibold rounded-lg p-3 touch-button"
+            aria-label="Join Free Today"
+          >
+            Join Free Today
+          </button>
+        </form>
+        {formState.error && <p className="text-red-500 mt-4">{formState.error}</p>}
+        {formState.success && <p className="text-green-500 mt-4">{formState.success}</p>}
+      </section>
 
-        <div className="mt-24 grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-          <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow border border-gray-100">
-            <div className="w-14 h-14 bg-primary/10 rounded-xl mb-6 flex items-center justify-center">
-              <Users className="h-7 w-7 text-primary" />
-            </div>
-            <h3 className="text-2xl font-bold mb-3 text-gray-900">Verified Members</h3>
-            <p className="text-gray-600 leading-relaxed">
-              Connect with verified LGBTQ+ members in a safe, moderated environment with profile verification and
-              security features.
-            </p>
-          </div>
-          <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow border border-gray-100">
-            <div className="w-14 h-14 bg-accent/10 rounded-xl mb-6 flex items-center justify-center">
-              <MessageCircle className="h-7 w-7 text-accent" />
-            </div>
-            <h3 className="text-2xl font-bold mb-3 text-gray-900">Smart Matching</h3>
-            <p className="text-gray-600 leading-relaxed">
-              Our advanced algorithm helps you find compatible matches based on your preferences, interests, and
-              relationship goals.
-            </p>
-          </div>
-          <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow border border-gray-100">
-            <div className="w-14 h-14 bg-primary/10 rounded-xl mb-6 flex items-center justify-center">
-              <Video className="h-7 w-7 text-primary" />
-            </div>
-            <h3 className="text-2xl font-bold mb-3 text-gray-900">Rich Communication</h3>
-            <p className="text-gray-600 leading-relaxed">
-              Text, voice, and video calls with premium features. Connect meaningfully with unlimited messaging for Gold
-              members.
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-24 text-center">
-          <h2 className="text-4xl font-bold mb-4 text-gray-900">Membership Tiers</h2>
-          <p className="text-xl text-gray-600 mb-12">Choose the plan that fits your dating journey</p>
-          <div className="grid md:grid-cols-5 gap-4 max-w-6xl mx-auto">
+      {/* Features Section */}
+      <section className="bg-gray-800 py-12">
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="text-2xl md:text-3xl font-bold mb-8 text-yellow-500">Why Choose Eboni Dating?</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
             {[
-              { name: "Starter", color: "from-gray-400 to-gray-500", desc: "Basic features" },
-              { name: "Advanced", color: "from-blue-400 to-blue-600", desc: "Enhanced matching" },
-              { name: "Premium", color: "from-purple-400 to-purple-600", desc: "Priority support" },
-              { name: "Silver", color: "from-slate-300 to-slate-500", desc: "Advanced features" },
-              { name: "Gold", color: "from-amber-400 to-yellow-500", desc: "Unlimited access" },
-            ].map((tier) => (
+              { title: "Authentic Profiles", desc: "Real people. Real love stories." },
+              { title: "Private & Secure", desc: "Your information stays safe with us." },
+              { title: "Smart Matching", desc: "We connect you with compatible singles." },
+              { title: "Community Vibes", desc: "Celebrate love, culture, and connection." },
+            ].map((item, i) => (
               <div
-                key={tier.name}
-                className="bg-white rounded-xl p-6 shadow-md border border-gray-100 hover:shadow-lg transition-shadow"
+                key={i}
+                className="bg-gray-900 rounded-xl p-6 border border-gray-700 hover:border-yellow-500 transition"
               >
-                <div className={`w-12 h-12 bg-gradient-to-r ${tier.color} rounded-full mx-auto mb-3`} />
-                <h4 className="font-bold text-lg text-gray-900">{tier.name}</h4>
-                <p className="text-sm text-gray-600 mt-1">{tier.desc}</p>
+                <h3 className="text-xl font-semibold text-yellow-500 mb-2">{item.title}</h3>
+                <p className="text-gray-400 text-sm">{item.desc}</p>
               </div>
             ))}
           </div>
-          <Button asChild size="lg" className="mt-8 bg-primary hover:bg-primary/90">
-            <Link href="/upgrade">View All Plans</Link>
-          </Button>
         </div>
+      </section>
 
-        <div className="mt-24 bg-white rounded-3xl p-12 shadow-xl border border-gray-100">
-          <div className="grid md:grid-cols-3 gap-8 text-center">
-            <div>
-              <div className="text-5xl font-bold text-primary mb-2">50K+</div>
-              <p className="text-gray-600 text-lg">Active Members</p>
-            </div>
-            <div>
-              <div className="text-5xl font-bold text-primary mb-2">10K+</div>
-              <p className="text-gray-600 text-lg">Successful Matches</p>
-            </div>
-            <div>
-              <div className="text-5xl font-bold text-primary mb-2">4.8★</div>
-              <p className="text-gray-600 text-lg">User Rating</p>
-            </div>
+      {/* Membership Section */}
+      <section className="bg-gray-900 py-16">
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="text-2xl md:text-3xl font-bold text-yellow-500 mb-10">Choose Your Membership Plan</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[
+              { plan: "Free", price: "$0", features: ["Basic Matchmaking", "Profile Setup"] },
+              { plan: "Premium", price: "$19.99/mo", features: ["Advanced Matchmaking", "Unlimited Chats", "Priority Support"] },
+              { plan: "Elite", price: "$49.99/mo", features: ["Everything in Premium", "Verified Badge", "Video Calls"] },
+            ].map((p, i) => (
+              <div key={i} className="bg-gray-800 rounded-2xl p-6 shadow-lg hover:scale-105 transition">
+                <h3 className="text-xl font-semibold text-yellow-500 mb-3">{p.plan}</h3>
+                <p className="text-3xl font-bold mb-4">{p.price}</p>
+                <ul className="text-gray-300 text-sm mb-6 space-y-2">
+                  {p.features.map((f, j) => (
+                    <li key={j}>• {f}</li>
+                  ))}
+                </ul>
+                <a
+                  href="/pricing"
+                  className="bg-yellow-600 hover:bg-yellow-500 text-white font-semibold py-2 px-4 rounded-lg inline-block"
+                  aria-label={`Get started with ${p.plan} plan`}
+                >
+                  Get Started
+                </a>
+              </div>
+            ))}
           </div>
         </div>
-      </div>
+      </section>
 
-      <footer className="bg-white border-t mt-24 py-12">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-            <div className="flex items-center gap-2">
-              <Heart className="h-6 w-6 text-primary fill-primary" />
-              <span className="text-xl font-bold text-gray-900">Eboni Dating</span>
-            </div>
-            <div className="flex gap-6 text-sm text-gray-600">
-              <Link href="/terms" className="hover:text-primary transition-colors">
-                Terms of Service
-              </Link>
-              <Link href="/privacy" className="hover:text-primary transition-colors">
-                Privacy Policy
-              </Link>
-              <Link href="/upgrade" className="hover:text-primary transition-colors">
-                Pricing
-              </Link>
-            </div>
-          </div>
-          <div className="text-center mt-6 text-gray-600">
-            <p className="mb-2">© 2025 Eboni Dating. All rights reserved.</p>
-            <p className="text-sm">A safe and inclusive platform for LGBTQ+ connections</p>
+      {/* Community Section */}
+      <section className="bg-gray-800 py-16">
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="text-2xl md:text-3xl font-bold text-yellow-500 mb-10">
+            Join Our Thriving Community
+          </h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+            {sliderImages.map((src, i) => (
+              <Image
+                key={i}
+                src={src}
+                alt={`Community member ${i + 1}`}
+                width={300}
+                height={300}
+                className="rounded-xl object-cover w-full h-auto hover:opacity-90 transition"
+              />
+            ))}
           </div>
         </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-gray-900 py-8 text-center border-t border-gray-700">
+        <p className="text-gray-400 text-sm">
+          © {new Date().getFullYear()} Eboni Dating — All rights reserved.
+        </p>
+        <nav className="mt-2 flex justify-center gap-6 text-sm">
+          <a href="/terms" aria-label="Terms of Service" className="hover:text-yellow-500">Terms of Service</a>
+          <a href="/privacy" aria-label="Privacy Policy" className="hover:text-yellow-500">Privacy Policy</a>
+          <a href="/pricing" aria-label="Pricing" className="hover:text-yellow-500">Pricing</a>
+        </nav>
       </footer>
-    </div>
-  )
+    </main>
+  );
 }
+

@@ -1,27 +1,28 @@
-import type React from "react"
-import type { Metadata } from "next"
-import { GeistSans } from "geist/font/sans"
-import { GeistMono } from "geist/font/mono"
-import { Analytics } from "@vercel/analytics/next"
-import { Suspense } from "react"
-import "./globals.css"
+import './globals.css'
+import { Inter } from 'next/font/google'
 
-export const metadata: Metadata = {
-  title: "Eboni Dating - LGBTQ+ Dating Platform",
-  description: "Premium dating platform for gay and lesbian connections",
-  generator: "v0.app",
+const inter = Inter({ subsets: ['latin'] })
+
+export const metadata = {
+  title: 'Eboni Dating - Find Authentic Black Love & Build Connections',
+  description: 'Join thousands of Black singles worldwide in a safe, culturally-rich dating community.',
+  viewport: 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no',
 }
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode
-}>) {
+}) {
   return (
-    <html lang="en">
-      <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
-        <Suspense fallback={null}>{children}</Suspense>
-        <Analytics />
+    <html lang="en" className="scroll-smooth">
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+      </head>
+      <body className={`${inter.className} antialiased overflow-x-hidden`}>
+        <div className="min-h-screen w-full overflow-x-hidden">
+          {children}
+        </div>
       </body>
     </html>
   )

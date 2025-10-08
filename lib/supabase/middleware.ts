@@ -25,18 +25,9 @@ export async function updateSession(request: NextRequest) {
     },
   )
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  const publicRoutes = ["/", "/auth/login", "/auth/signup", "/auth/verify-email", "/terms", "/privacy", "/upgrade"]
-  const isPublicRoute = publicRoutes.some((route) => request.nextUrl.pathname.startsWith(route))
-
-  if (!user && !isPublicRoute) {
-    const url = request.nextUrl.clone()
-    url.pathname = "/auth/login"
-    return NextResponse.redirect(url)
-  }
+  // IMPORTANT: Do not run code between createServerClient and supabase.auth.getUser()
+  // This refreshes the auth session
+  await supabase.auth.getUser()
 
   return supabaseResponse
 }
