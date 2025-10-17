@@ -5,9 +5,11 @@ import { createClient } from "@/lib/supabase/client";
 
 // List your images here (make sure they exist in /public)
 const sliderImages = [
-  "/community1.jpg",
-  "/community2.jpg",
-  "/community3.jpg",
+  "/couple1.jpg",
+  "/couple2.jpg",
+  "/couple3.jpg",
+  "/couple4.jpg",
+  "/couple5.jpg",
 ];
 
 export default function Home() {
