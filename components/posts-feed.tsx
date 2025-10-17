@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Heart, MessageCircle, Eye, Loader2 } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { VerifiedBadge } from "./verified-badge"
 
 interface Post {
   id: string
@@ -20,6 +21,7 @@ interface Post {
   profiles: {
     full_name: string | null
     display_name: string | null
+    verified: boolean
   }
 }
 
@@ -42,7 +44,8 @@ export function PostsFeed() {
           *,
           profiles (
             full_name,
-            display_name
+            display_name,
+            verified
           )
         `,
         )
@@ -53,7 +56,6 @@ export function PostsFeed() {
 
       setPosts(data || [])
     } catch (err) {
-      console.error("[v0] Error fetching posts:", err)
       setError("Failed to load posts")
     } finally {
       setLoading(false)
@@ -73,10 +75,9 @@ export function PostsFeed() {
 
       if (error) throw error
 
-      // Update local state
       setPosts(posts.map((p) => (p.id === postId ? { ...p, likes: p.likes + 1 } : p)))
     } catch (err) {
-      console.error("[v0] Error liking post:", err)
+      setError("Failed to like post")
     }
   }
 
@@ -127,10 +128,13 @@ export function PostsFeed() {
                   {getInitials(post.profiles?.display_name || post.profiles?.full_name)}
                 </AvatarFallback>
               </Avatar>
-              <div>
-                <CardTitle className="text-base">
-                  {post.profiles?.display_name || post.profiles?.full_name || "Anonymous"}
-                </CardTitle>
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <CardTitle className="text-base">
+                    {post.profiles?.display_name || post.profiles?.full_name || "Anonymous"}
+                  </CardTitle>
+                  <VerifiedBadge verified={post.profiles?.verified || false} size="sm" />
+                </div>
                 <CardDescription>{new Date(post.created_at).toLocaleDateString()}</CardDescription>
               </div>
             </div>

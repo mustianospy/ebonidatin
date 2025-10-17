@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
@@ -12,7 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { getCountries, getCitiesByCountry } from "@/lib/countries-data"
-import { Loader2, Mail } from "lucide-react"
+import { Loader2, Mail } from 'lucide-react'
+import { MembershipSelector } from "./membership-selector"
 
 export function EnhancedSignupForm() {
   const [email, setEmail] = useState("")
@@ -23,6 +23,8 @@ export function EnhancedSignupForm() {
   const [country, setCountry] = useState("")
   const [city, setCity] = useState("")
   const [userType, setUserType] = useState<"user" | "model">("user")
+  const [membershipTier, setMembershipTier] = useState("free")
+  const [paymentMethod, setPaymentMethod] = useState("")
   const [termsAccepted, setTermsAccepted] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -30,13 +32,14 @@ export function EnhancedSignupForm() {
 
   const countries = getCountries()
   const cities = country ? getCitiesByCountry(country) : []
+  const requiresPayment = membershipTier !== "free"
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
     setLoading(true)
 
-    // Validation
+    // <CHANGE> Added validation for membership and payment
     if (!email || !password || !fullName || !phone || !country || !city) {
       setError("Please fill in all required fields")
       setLoading(false)
@@ -55,6 +58,12 @@ export function EnhancedSignupForm() {
       return
     }
 
+    if (requiresPayment && !paymentMethod) {
+      setError("Please select a payment method for premium membership")
+      setLoading(false)
+      return
+    }
+
     if (!termsAccepted) {
       setError("You must accept the terms and conditions")
       setLoading(false)
@@ -63,7 +72,6 @@ export function EnhancedSignupForm() {
 
     try {
       const supabase = createClient()
-
       const redirectUrl = process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${window.location.origin}/auth/callback`
 
       // Sign up the user
@@ -78,6 +86,7 @@ export function EnhancedSignupForm() {
             country,
             city,
             user_type: userType,
+            membership_tier: membershipTier,
             terms_accepted: true,
             terms_accepted_at: new Date().toISOString(),
           },
@@ -87,7 +96,7 @@ export function EnhancedSignupForm() {
       if (authError) throw authError
 
       if (authData.user) {
-        // Create profile with additional information
+        // Create profile with membership tier
         const { error: profileError } = await supabase.from("profiles").insert({
           id: authData.user.id,
           email: authData.user.email,
@@ -96,20 +105,44 @@ export function EnhancedSignupForm() {
           country,
           city,
           user_type: userType,
+          subscription_tier: membershipTier,
           email_verified: false,
+          gallery_access: membershipTier !== "free",
           terms_accepted: true,
           terms_accepted_at: new Date().toISOString(),
         })
 
         if (profileError) {
-          console.error("[v0] Profile creation error:", profileError)
-          throw new Error("Failed to create profile. Please try again.")
+          setError("Failed to create profile. Please try again.")
+          return
+        }
+
+        // <CHANGE> If premium membership, create checkout session
+        if (requiresPayment) {
+          try {
+            const response = await fetch("/api/create-checkout-session", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                userId: authData.user.id,
+                tier: membershipTier,
+                email: email,
+              }),
+            })
+
+            if (response.ok) {
+              const { url } = await response.json()
+              window.location.href = url
+              return
+            }
+          } catch (err) {
+            console.error("Checkout error:", err)
+          }
         }
 
         setSuccess(true)
       }
     } catch (err: any) {
-      console.error("[v0] Signup error:", err)
       setError(err.message || "An error occurred during sign up. Please try again.")
     } finally {
       setLoading(false)
@@ -127,7 +160,6 @@ export function EnhancedSignupForm() {
       })
       if (error) throw error
     } catch (err: any) {
-      console.error("[v0] Google signup error:", err)
       setError(err.message || "Failed to sign up with Google")
     }
   }
@@ -164,7 +196,7 @@ export function EnhancedSignupForm() {
   }
 
   return (
-    <Card className="w-full max-w-2xl mx-auto">
+    <Card className="w-full max-w-4xl mx-auto">
       <CardHeader>
         <CardTitle>Create Your Account</CardTitle>
         <CardDescription>Join the Eboni Dating community today</CardDescription>
@@ -208,12 +240,15 @@ export function EnhancedSignupForm() {
           </div>
         </div>
 
-        <form onSubmit={handleSignUp} className="space-y-4">
+        <form onSubmit={handleSignUp} className="space-y-6">
           {error && (
             <Alert variant="destructive">
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
+
+          {/* <CHANGE> Added membership selector */}
+          <MembershipSelector selectedPlan={membershipTier} onSelect={setMembershipTier} />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -271,7 +306,7 @@ export function EnhancedSignupForm() {
                 value={country}
                 onValueChange={(value) => {
                   setCountry(value)
-                  setCity("") // Reset city when country changes
+                  setCity("")
                 }}
               >
                 <SelectTrigger id="country">
@@ -328,6 +363,24 @@ export function EnhancedSignupForm() {
             </div>
           </div>
 
+          {/* <CHANGE> Added payment method selection for premium users */}
+          {requiresPayment && (
+            <div className="space-y-2">
+              <Label htmlFor="paymentMethod">Payment Method *</Label>
+              <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                <SelectTrigger id="paymentMethod">
+                  <SelectValue placeholder="Select payment method" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="card">Credit/Debit Card</SelectItem>
+                  <SelectItem value="paypal">PayPal</SelectItem>
+                  <SelectItem value="apple">Apple Pay</SelectItem>
+                  <SelectItem value="google">Google Pay</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
           <div className="space-y-4 pt-4">
             <div className="flex items-start space-x-2">
               <Checkbox
@@ -347,10 +400,10 @@ export function EnhancedSignupForm() {
             {loading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Creating Account...
+                {requiresPayment ? "Processing Payment..." : "Creating Account..."}
               </>
             ) : (
-              "Create Account"
+              `Create Account${requiresPayment ? " & Pay" : ""}`
             )}
           </Button>
 
