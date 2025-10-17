@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
-import { Camera, Upload, Star, Heart, Award, Sparkles, Crown, Zap } from "lucide-react"
+import { Upload, Star, Heart, Award, Sparkles, Crown, Zap } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useToast } from "@/hooks/use-toast"
 
@@ -132,9 +132,7 @@ export function ProfileCustomization({ userId, currentCoverPhoto, currentBadges 
                 {coverPhoto ? (
                   <img src={coverPhoto || "/placeholder.svg"} alt="Cover" className="w-full h-full object-cover" />
                 ) : (
-                  <div className="flex items-center justify-center h-full">
-                    <Camera className="h-12 w-12 text-muted-foreground" />
-                  </div>
+                  <img src="/couple-1.jpg" alt="Default cover" className="w-full h-full object-cover opacity-50" />
                 )}
               </div>
 

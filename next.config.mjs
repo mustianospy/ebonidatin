@@ -6,6 +6,7 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  
   images: {
     remotePatterns: [
       {
@@ -16,13 +17,22 @@ const nextConfig = {
         protocol: "https",
         hostname: "ebonidating.com",
       },
+      {
+        protocol: "https",
+        hostname: "**.blob.vercel-storage.com",
+      },
     ],
+    formats: ["image/avif", "image/webp"],
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
   },
+
   async headers() {
     return [
       {
         source: "/:path*",
         headers: [
+          // Security headers
           {
             key: "X-DNS-Prefetch-Control",
             value: "on",
@@ -47,9 +57,57 @@ const nextConfig = {
             key: "Permissions-Policy",
             value: "camera=(), microphone=(), geolocation=()",
           },
+          // Performance headers
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+          // Content Security Policy
+          {
+            key: "Content-Security-Policy",
+            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.vercel-insights.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://api.vercel.com https://*.supabase.co https://stripe.com;",
+          },
+        ],
+      },
+      // Cache static assets
+      {
+        source: "/static/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+        ],
+      },
+      // Cache API responses
+      {
+        source: "/api/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=60, s-maxage=120",
+          },
         ],
       },
     ]
+  },
+
+  swcMinify: true,
+  compress: true,
+  productionBrowserSourceMaps: false,
+
+  async redirects() {
+    return [
+      {
+        source: "/index",
+        destination: "/",
+        permanent: true,
+      },
+    ]
+  },
+
+  experimental: {
+    optimizePackageImports: ["@/components", "@/lib"],
   },
 }
 

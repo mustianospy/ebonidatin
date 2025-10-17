@@ -251,13 +251,15 @@ export default function DashboardContent({ profile }: DashboardContentProps) {
                   <CardTitle>Getting Started</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
+                  {/* Real onboarding steps would go here */}
+                  {/* Placeholder for real onboarding steps */}
                   <div className="flex items-start gap-3">
                     <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
                       <span className="text-green-600 font-semibold">✓</span>
                     </div>
                     <div>
-                      <p className="font-medium">Profile Created</p>
-                      <p className="text-sm text-muted-foreground">Your profile is live and visible to others</p>
+                      <p className="font-medium">Complete Your Profile</p>
+                      <p className="text-sm text-muted-foreground">Add more details to your profile</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">

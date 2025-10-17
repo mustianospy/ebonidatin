@@ -22,21 +22,16 @@ export default function AuthCallbackPage() {
         const accessToken = hashParams.get("access_token")
         const type = hashParams.get("type")
 
-        console.log("[v0] Callback params:", { type, hasToken: !!accessToken })
-
         if (type === "signup" && accessToken) {
           // Update the user's email_verified status in profiles
           const {
             data: { user },
           } = await supabase.auth.getUser()
 
-          console.log("[v0] User from callback:", user?.id)
-
           if (user) {
             const { error } = await supabase.from("profiles").update({ email_verified: true }).eq("id", user.id)
 
             if (error) {
-              console.error("[v0] Error updating email verification:", error)
               throw new Error("Failed to verify email. Please try again.")
             }
 
@@ -55,7 +50,6 @@ export default function AuthCallbackPage() {
           setMessage("Invalid or expired verification link")
         }
       } catch (error: any) {
-        console.error("[v0] Verification error:", error)
         setStatus("error")
         setMessage(error.message || "An error occurred during verification")
       }
