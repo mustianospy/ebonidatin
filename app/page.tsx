@@ -67,6 +67,16 @@ export default function HomePage() {
         />
       </section>
 
+      {/* What is Eboni Dating? Section */}
+      <section className="container-responsive mx-auto px-4 py-16">
+        <div className="text-center mb-12">
+          <h2 className="heading-responsive text-3xl md:text-4xl font-bold text-gray-900 mb-4">What is Eboni Dating?</h2>
+          <p className="text-responsive text-lg text-gray-600 max-w-3xl mx-auto">
+            Eboni Dating is a dedicated online platform for Black individuals to connect, build meaningful relationships, and find love. Our mission is to create a safe, welcoming, and culturally-rich space that celebrates Black love and empowers our community to find their perfect match. Whether you're looking for a serious relationship, a lasting friendship, or a fun date, Eboni Dating is the place to be.
+          </p>
+        </div>
+      </section>
+
       {/* Model of Period Section */}
       <section className="container-responsive mx-auto px-4 py-16">
         <ModelOfPeriod models={modelsOfPeriod} />
