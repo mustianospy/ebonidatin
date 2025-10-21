@@ -1,48 +1,62 @@
-"use client";
+"use client"
 
-import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, CheckCircle, XCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import { createClient } from "@/lib/supabase/client"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Loader2, CheckCircle, XCircle } from "lucide-react"
+import { Button } from "@/components/ui/button"
 
 export default function AuthCallbackPage() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const supabase = createClientComponentClient();
-
-  const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
-  const [message, setMessage] = useState("Verifying your email...");
+  const router = useRouter()
+  const [status, setStatus] = useState<"loading" | "success" | "error">("loading")
+  const [message, setMessage] = useState("Verifying your email...")
 
   useEffect(() => {
-    const handleCallback = async () => {
+    const verifyEmail = async () => {
       try {
-        const code = searchParams.get("code");
-        if (!code) throw new Error("Missing verification code");
+        const supabase = createClient()
 
-        const { error } = await supabase.auth.exchangeCodeForSession(code);
-        if (error) throw new Error("Invalid or expired verification link");
+        // Get the code from the URL
+        const hashParams = new URLSearchParams(window.location.hash.substring(1))
+        const accessToken = hashParams.get("access_token")
+        const type = hashParams.get("type")
 
-        // Optionally update profile email_verified field
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          await supabase.from("profiles").update({ email_verified: true }).eq("id", user.id);
+        if (type === "signup" && accessToken) {
+          // Update the user's email_verified status in profiles
+          const {
+            data: { user },
+          } = await supabase.auth.getUser()
+
+          if (user) {
+            const { error } = await supabase.from("profiles").update({ email_verified: true }).eq("id", user.id)
+
+            if (error) {
+              throw new Error("Failed to verify email. Please try again.")
+            }
+
+            setStatus("success")
+            setMessage("Email verified successfully! Redirecting to dashboard...")
+
+            // Redirect to dashboard after 2 seconds
+            setTimeout(() => {
+              router.push("/dashboard")
+            }, 2000)
+          } else {
+            throw new Error("User not found")
+          }
+        } else {
+          setStatus("error")
+          setMessage("Invalid or expired verification link")
         }
-
-        setStatus("success");
-        setMessage("Email verified successfully! Redirecting to dashboard...");
-
-        setTimeout(() => router.push("/dashboard"), 2000);
       } catch (error: any) {
-        console.error("Auth callback error:", error);
-        setStatus("error");
-        setMessage(error.message || "An error occurred during verification");
+        setStatus("error")
+        setMessage(error.message || "An error occurred during verification")
       }
-    };
+    }
 
-    handleCallback();
-  }, [router, searchParams, supabase]);
+    verifyEmail()
+  }, [router])
 
   return (
     <div className="flex min-h-screen w-full items-center justify-center p-6 bg-gradient-to-b from-amber-50 to-white">
@@ -68,5 +82,5 @@ export default function AuthCallbackPage() {
         )}
       </Card>
     </div>
-  );
+  )
 }

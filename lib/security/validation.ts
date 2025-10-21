@@ -34,7 +34,7 @@ export const sanitizeInput = (input: string): string => {
   return input
     .trim()
     .replace(/[<>]/g, "") // Remove angle brackets
-    .replace(/\b(?:javascript|data|vbscript):/gi, "") // Remove dangerous URL schemes
+    .replace(/javascript:/gi, "") // Remove javascript: protocol
     .slice(0, 1000) // Limit length
 }
 

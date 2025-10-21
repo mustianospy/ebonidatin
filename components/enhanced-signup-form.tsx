@@ -11,8 +11,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { getCountries, getCitiesByCountry } from "@/lib/countries-data"
-import { Loader2, Mail } from 'lucide-react'
+import { Loader2, Mail, Upload } from "lucide-react"
 import { MembershipSelector } from "./membership-selector"
+import Image from "next/image"
 
 export function EnhancedSignupForm() {
   const [email, setEmail] = useState("")
@@ -29,17 +30,64 @@ export function EnhancedSignupForm() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+  const [profilePicture, setProfilePicture] = useState<File | null>(null)
+  const [profilePicturePreview, setProfilePicturePreview] = useState<string | null>(null)
+  const [uploadingPicture, setUploadingPicture] = useState(false)
 
   const countries = getCountries()
   const cities = country ? getCitiesByCountry(country) : []
   const requiresPayment = membershipTier !== "free"
+
+  const handleProfilePictureChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        setError("Profile picture must be less than 5MB")
+        return
+      }
+      if (!file.type.startsWith("image/")) {
+        setError("Please select an image file")
+        return
+      }
+      setProfilePicture(file)
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setProfilePicturePreview(reader.result as string)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const uploadProfilePicture = async (): Promise<string | null> => {
+    if (!profilePicture) return null
+
+    setUploadingPicture(true)
+    try {
+      const formData = new FormData()
+      formData.append("file", profilePicture)
+
+      const response = await fetch("/api/upload-profile-picture", {
+        method: "POST",
+        body: formData,
+      })
+
+      if (!response.ok) throw new Error("Failed to upload profile picture")
+
+      const data = await response.json()
+      return data.url
+    } catch (err) {
+      setError("Failed to upload profile picture")
+      return null
+    } finally {
+      setUploadingPicture(false)
+    }
+  }
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
     setLoading(true)
 
-    // <CHANGE> Added validation for membership and payment
     if (!email || !password || !fullName || !phone || !country || !city) {
       setError("Please fill in all required fields")
       setLoading(false)
@@ -71,10 +119,18 @@ export function EnhancedSignupForm() {
     }
 
     try {
+      let profilePhotoUrl = null
+      if (profilePicture) {
+        profilePhotoUrl = await uploadProfilePicture()
+        if (!profilePhotoUrl) {
+          setLoading(false)
+          return
+        }
+      }
+
       const supabase = createClient()
       const redirectUrl = process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${window.location.origin}/auth/callback`
 
-      // Sign up the user
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
@@ -87,6 +143,7 @@ export function EnhancedSignupForm() {
             city,
             user_type: userType,
             membership_tier: membershipTier,
+            profile_photo_url: profilePhotoUrl,
             terms_accepted: true,
             terms_accepted_at: new Date().toISOString(),
           },
@@ -96,7 +153,6 @@ export function EnhancedSignupForm() {
       if (authError) throw authError
 
       if (authData.user) {
-        // Create profile with membership tier
         const { error: profileError } = await supabase.from("profiles").insert({
           id: authData.user.id,
           email: authData.user.email,
@@ -106,6 +162,7 @@ export function EnhancedSignupForm() {
           city,
           user_type: userType,
           subscription_tier: membershipTier,
+          profile_photo_url: profilePhotoUrl,
           email_verified: false,
           gallery_access: membershipTier !== "free",
           terms_accepted: true,
@@ -117,7 +174,6 @@ export function EnhancedSignupForm() {
           return
         }
 
-        // <CHANGE> If premium membership, create checkout session
         if (requiresPayment) {
           try {
             const response = await fetch("/api/create-checkout-session", {
@@ -136,7 +192,8 @@ export function EnhancedSignupForm() {
               return
             }
           } catch (err) {
-            console.error("Checkout error:", err)
+            setError("Payment processing failed. Please try again.")
+            return
           }
         }
 
@@ -247,8 +304,37 @@ export function EnhancedSignupForm() {
             </Alert>
           )}
 
-          {/* <CHANGE> Added membership selector */}
           <MembershipSelector selectedPlan={membershipTier} onSelect={setMembershipTier} />
+
+          <div className="space-y-2">
+            <Label htmlFor="profilePicture">Profile Picture (Optional)</Label>
+            <div className="flex items-center gap-4">
+              {profilePicturePreview ? (
+                <div className="relative w-24 h-24 rounded-full overflow-hidden border-2 border-amber-600">
+                  <Image
+                    src={profilePicturePreview || "/placeholder.svg"}
+                    alt="Profile preview"
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+              ) : (
+                <div className="w-24 h-24 rounded-full bg-gray-100 flex items-center justify-center border-2 border-dashed border-gray-300">
+                  <Upload className="h-8 w-8 text-gray-400" />
+                </div>
+              )}
+              <div className="flex-1">
+                <Input
+                  id="profilePicture"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleProfilePictureChange}
+                  className="cursor-pointer"
+                />
+                <p className="text-xs text-muted-foreground mt-1">Max size: 5MB. Formats: JPG, PNG, WebP</p>
+              </div>
+            </div>
+          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -363,7 +449,6 @@ export function EnhancedSignupForm() {
             </div>
           </div>
 
-          {/* <CHANGE> Added payment method selection for premium users */}
           {requiresPayment && (
             <div className="space-y-2">
               <Label htmlFor="paymentMethod">Payment Method *</Label>
@@ -396,11 +481,19 @@ export function EnhancedSignupForm() {
             </div>
           </div>
 
-          <Button type="submit" className="w-full bg-amber-600 hover:bg-amber-700" disabled={loading}>
-            {loading ? (
+          <Button
+            type="submit"
+            className="w-full bg-amber-600 hover:bg-amber-700"
+            disabled={loading || uploadingPicture}
+          >
+            {loading || uploadingPicture ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                {requiresPayment ? "Processing Payment..." : "Creating Account..."}
+                {uploadingPicture
+                  ? "Uploading Picture..."
+                  : requiresPayment
+                    ? "Processing Payment..."
+                    : "Creating Account..."}
               </>
             ) : (
               `Create Account${requiresPayment ? " & Pay" : ""}`
