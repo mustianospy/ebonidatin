@@ -39,7 +39,7 @@ export default function HomePage() {
     <div className="min-h-screen bg-gradient-to-b from-amber-50 to-white">
       {/* Header */}
       <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+        <div className="container-responsive mx-auto px-4 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             <img src="/eboni-logo.png" alt="Eboni Dating" className="h-8 w-8" />
             <span className="text-xl font-bold text-gray-900">Eboni Dating</span>
@@ -55,7 +55,7 @@ export default function HomePage() {
         </div>
       </header>
 
-      <section className="container mx-auto px-4 py-8">
+      <section className="container-responsive mx-auto px-4 py-8">
         <BannerHero
           image="/model-1.jpg"
           title="Find Love Within the Black Community"
@@ -68,15 +68,15 @@ export default function HomePage() {
       </section>
 
       {/* Model of Period Section */}
-      <section className="container mx-auto px-4 py-16">
+      <section className="container-responsive mx-auto px-4 py-16">
         <ModelOfPeriod models={modelsOfPeriod} />
       </section>
 
       {/* Features Section */}
-      <section className="container mx-auto px-4 py-16 font-medium text-sidebar-primary-foreground">
+      <section className="container-responsive mx-auto px-4 py-16 font-medium text-sidebar-primary-foreground">
         <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Why Choose Eboni Dating?</h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          <h2 className="heading-responsive text-3xl md:text-4xl font-bold text-gray-900 mb-4">Why Choose Eboni Dating?</h2>
+          <p className="text-responsive text-lg text-gray-600 max-w-2xl mx-auto">
             Experience a dating platform built specifically for the Black diaspora community
           </p>
         </div>
@@ -130,7 +130,7 @@ export default function HomePage() {
       </section>
 
       {/* Stats Section */}
-      <section className="container mx-auto px-4 py-16 bg-gradient-to-r from-amber-600 to-orange-600 rounded-2xl my-16">
+      <section className="container-responsive mx-auto px-4 py-16 bg-gradient-to-r from-amber-600 to-orange-600 rounded-2xl my-16">
         <Card className="max-w-4xl mx-auto shadow-2xl border-0 bg-white">
           <CardContent className="p-8 md:p-12">
             <div className="grid md:grid-cols-3 gap-8 text-center">
@@ -155,11 +155,11 @@ export default function HomePage() {
       </section>
 
       {/* Membership Tiers */}
-      <section className="container mx-auto px-4 py-16">
+      <section className="container-responsive mx-auto px-4 py-16">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Membership Tiers</h2>
-            <p className="text-lg text-gray-600">Choose the plan that fits your dating journey</p>
+            <h2 className="heading-responsive text-3xl md:text-4xl font-bold text-gray-900 mb-4">Membership Tiers</h2>
+            <p className="text-responsive text-lg text-gray-600">Choose the plan that fits your dating journey</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -224,7 +224,7 @@ export default function HomePage() {
       </section>
 
       {/* CTA Section */}
-      <section className="container mx-auto px-4 py-16">
+      <section className="container-responsive mx-auto px-4 py-16">
         <BannerHero
           image="/model-2.jpg"
           title="Ready to Find Your Match?"
@@ -238,7 +238,7 @@ export default function HomePage() {
 
       {/* Footer */}
       <footer className="border-t bg-white mt-16">
-        <div className="container mx-auto px-4 py-8">
+        <div className="container-responsive mx-auto px-4 py-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <img src="/eboni-logo.png" alt="Eboni Dating" className="h-5 w-5" />

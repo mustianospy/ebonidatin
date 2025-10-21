@@ -12,7 +12,7 @@ ALTER TABLE reports ENABLE ROW LEVEL SECURITY;
 
 -- Profiles policies
 CREATE POLICY "Users can view all profiles" ON profiles
-  FOR SELECT USING (true);
+  FOR SELECT USING (auth.role() = 'authenticated');
 
 CREATE POLICY "Users can update own profile" ON profiles
   FOR UPDATE USING (auth.uid() = id);

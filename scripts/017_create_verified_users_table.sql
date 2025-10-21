@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS verified_users (
 
 ALTER TABLE verified_users ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Anyone can view verified status" ON verified_users FOR SELECT USING (true);
+CREATE POLICY "Authenticated users can view verified status" ON verified_users FOR SELECT USING (auth.role() = 'authenticated');
 CREATE POLICY "Admins can manage verifications" ON verified_users
   FOR ALL USING (
     EXISTS (

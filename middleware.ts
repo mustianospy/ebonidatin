@@ -1,54 +1,44 @@
-import { updateSession } from "@/lib/supabase/middleware"
-import { type NextRequest, NextResponse } from "next/server"
+
+import { createClient } from "@/lib/supabase/server";
+import { updateSession } from "@/lib/supabase/middleware";
+import { type NextRequest, NextResponse } from "next/server";
 
 export async function middleware(request: NextRequest) {
-  const response = await updateSession(request)
+  const supabase = createClient();
+  const { data: settings } = await supabase.from("site_settings").select("*").single();
 
-  // Admin route protection
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  // Use a remote procedure call to a dedicated `is_admin` function.
+  const isAdmin = user ? (await supabase.rpc("is_admin")).data : false;
+
+  if (settings?.maintenance_mode && !isAdmin && !request.nextUrl.pathname.startsWith("/maintenance")) {
+    return NextResponse.redirect(new URL("/maintenance", request.url));
+  }
+
+  const response = await updateSession(request);
+
   if (request.nextUrl.pathname.startsWith("/admin") && !request.nextUrl.pathname.startsWith("/admin/login")) {
-    const supabase = await import("@/lib/supabase/server").then((mod) => mod.createClient())
-    const {
-      data: { user },
-    } = await (await supabase).auth.getUser()
-
     if (!user) {
-      return NextResponse.redirect(new URL("/admin/login", request.url))
+      return NextResponse.redirect(new URL("/admin/login", request.url));
     }
-
-    const { data: adminUser } = await (await supabase).from("admin_users").select("*").eq("user_id", user.id).single()
-
-    if (!adminUser) {
-      return NextResponse.redirect(new URL("/", request.url))
+    if (!isAdmin) {
+      return NextResponse.redirect(new URL("/", request.url));
     }
   }
 
-  // Protected user routes
-  const protectedRoutes = ["/dashboard", "/discover", "/matches", "/messages", "/profile", "/onboarding"]
-  const isProtectedRoute = protectedRoutes.some((route) => request.nextUrl.pathname.startsWith(route))
+  const protectedRoutes = ["/dashboard", "/discover", "/matches", "/messages", "/profile", "/onboarding"];
+  const isProtectedRoute = protectedRoutes.some((route) => request.nextUrl.pathname.startsWith(route));
 
-  if (isProtectedRoute) {
-    const supabase = await import("@/lib/supabase/server").then((mod) => mod.createClient())
-    const {
-      data: { user },
-    } = await (await supabase).auth.getUser()
-
-    if (!user) {
-      return NextResponse.redirect(new URL("/auth/login", request.url))
-    }
+  if (isProtectedRoute && !user) {
+    return NextResponse.redirect(new URL("/auth/login", request.url));
   }
 
-  return response
+  return response;
 }
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - images - .svg, .png, .jpg, .jpeg, .gif, .webp
-     */
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"
   ],
-}
+};
