@@ -1,12 +1,9 @@
-import { NextResponse } from "next/server"
-import { detectUserLanguage } from "@/lib/i18n/detect-language"
+import { NextRequest, NextResponse } from 'next/server';
+import acceptLanguage from 'accept-language';
 
-export async function GET() {
-  try {
-    const language = await detectUserLanguage()
-    return NextResponse.json({ language })
-  } catch (error) {
-    console.error("[v0] Error in detect-language API:", error)
-    return NextResponse.json({ language: "en" })
-  }
+export function GET(request: NextRequest) {
+  const languages = request.headers.get('accept-language');
+  acceptLanguage.languages(['en-US', 'es-ES', 'fr-FR']);
+  const language = acceptLanguage.get(languages);
+  return NextResponse.json({ language });
 }
