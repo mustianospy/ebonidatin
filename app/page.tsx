@@ -7,34 +7,6 @@ import { BannerHero } from "@/components/banner-hero"
 import { ModelOfPeriod } from "@/components/model-of-period"
 
 export default function HomePage() {
-  // Sample data - replace with real data from database
-  const modelsOfPeriod = [
-    {
-      id: "1",
-      name: "Zara",
-      avatar: "/model-1.jpg",
-      images: ["/model-1.jpg", "/model-2.jpg", "/model-3.jpg"],
-      likes: 2450,
-      awardType: "day" as const,
-    },
-    {
-      id: "2",
-      name: "Amara",
-      avatar: "/model-2.jpg",
-      images: ["/model-2.jpg", "/model-3.jpg", "/model-4.jpg"],
-      likes: 8920,
-      awardType: "week" as const,
-    },
-    {
-      id: "3",
-      name: "Nadia",
-      avatar: "/model-3.jpg",
-      images: ["/model-3.jpg", "/model-4.jpg", "/model-5.jpg"],
-      likes: 24500,
-      awardType: "month" as const,
-    },
-  ]
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-amber-50 to-white">
       {/* Header */}
@@ -79,7 +51,7 @@ export default function HomePage() {
 
       {/* Model of Period Section */}
       <section className="container-responsive mx-auto px-4 py-16">
-        <ModelOfPeriod models={modelsOfPeriod} />
+        <ModelOfPeriod models={[]} />
       </section>
 
       {/* Features Section */}
@@ -205,7 +177,7 @@ export default function HomePage() {
                 <Button className="w-full bg-amber-600 hover:bg-amber-700" asChild>
                   <Link href="/pricing">Upgrade Now</Link>
                 </Button>
-              </CardContent>
+              </cardContent>
             </Card>
 
             <Card className="text-center hover:shadow-lg transition-shadow border-2">
