@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, Mail } from "lucide-react";
 import { useRouter } from "next/navigation";
+import va from "@vercel/analytics";
 
 export function LoginForm() {
   const [email, setEmail] = useState("");
@@ -33,15 +34,18 @@ export function LoginForm() {
 
       if (error) throw error;
 
+      va.track("login_success", { method: "email" });
       router.push("/dashboard");
     } catch (err: any) {
       setError(err.message || "An error occurred during login.");
+      va.track("login_error", { method: "email", error: err.message });
     } finally {
       setLoading(false);
     }
   };
 
   const handleGoogleSignIn = async () => {
+    va.track("login_attempt", { method: "google" });
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -51,9 +55,11 @@ export function LoginForm() {
       });
       if (error) {
         setError(error.message);
+        va.track("login_error", { method: "google", error: error.message });
       }
     } catch (err: any) {
       setError(err.message || "An error occurred during Google sign in.");
+      va.track("login_error", { method: "google", error: err.message });
     }
   };
 
