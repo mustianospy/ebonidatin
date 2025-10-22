@@ -13,54 +13,49 @@ export default function AuthCallbackPage() {
   const [message, setMessage] = useState("Verifying your email...")
 
   useEffect(() => {
-    const handleAuthCallback = async () => {
-      const supabase = createClient()
-      const {
-        data: { session },
-        error,
-      } = await supabase.auth.getSession()
+    const verifyEmail = async () => {
+      try {
+        const supabase = createClient()
 
-      if (error) {
-        setStatus("error")
-        setMessage("Failed to get session. Please try again.")
-        return
-      }
+        // Get the code from the URL
+        const hashParams = new URLSearchParams(window.location.hash.substring(1))
+        const accessToken = hashParams.get("access_token")
+        const type = hashParams.get("type")
 
-      if (session) {
-        const { data: user, error: userError } = await supabase.auth.getUser()
+        if (type === "signup" && accessToken) {
+          // Update the user's email_verified status in profiles
+          const {
+            data: { user },
+          } = await supabase.auth.getUser()
 
-        if (userError) {
-          setStatus("error")
-          setMessage("Failed to get user. Please try again.")
-          return
-        }
-        
-        if (user) {
-          const { error: profileError } = await supabase.from("profiles").update({ email_verified: true }).eq("id", user.user.id)
+          if (user) {
+            const { error } = await supabase.from("profiles").update({ email_verified: true }).eq("id", user.id)
 
-          if (profileError) {
-            setStatus("error")
-            setMessage("Failed to verify email. Please try again.")
-            return
+            if (error) {
+              throw new Error("Failed to verify email. Please try again.")
+            }
+
+            setStatus("success")
+            setMessage("Email verified successfully! Redirecting to dashboard...")
+
+            // Redirect to dashboard after 2 seconds
+            setTimeout(() => {
+              router.push("/dashboard")
+            }, 2000)
+          } else {
+            throw new Error("User not found")
           }
-
-          setStatus("success")
-          setMessage("Email verified successfully! Redirecting to dashboard...")
-
-          setTimeout(() => {
-            router.push("/dashboard")
-          }, 2000)
         } else {
           setStatus("error")
-          setMessage("User not found.")
+          setMessage("Invalid or expired verification link")
         }
-      } else {
+      } catch (error: any) {
         setStatus("error")
-        setMessage("No active session found. Please log in.")
+        setMessage(error.message || "An error occurred during verification")
       }
     }
 
-    handleAuthCallback()
+    verifyEmail()
   }, [router])
 
   return (

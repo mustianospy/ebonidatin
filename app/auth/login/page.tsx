@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useState } from "react"
 
 export default function LoginPage() {
@@ -16,6 +17,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const router = useRouter()
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -37,10 +39,8 @@ export default function LoginPage() {
           .eq("id", data.user.id)
           .single()
 
-        if (profileError && profileError.code !== 'PGRST116') {
-          // PGRST116 means no rows found, which we can handle.
-          // Any other error should be thrown.
-          throw profileError
+        if (profileError) {
+          // Error handled silently
         }
 
         if (profile && !profile.email_verified) {
@@ -51,13 +51,11 @@ export default function LoginPage() {
         }
       }
 
-      // Instead of router.push, we do a full page refresh to the dashboard.
-      // This allows the server-side logic in the dashboard page to correctly
-      // handle the user's authentication state and redirect to onboarding if necessary.
-      window.location.href = '/dashboard'
-
+      router.push("/dashboard")
+      router.refresh()
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred")
+    } finally {
       setIsLoading(false)
     }
   }
