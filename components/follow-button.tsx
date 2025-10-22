@@ -34,7 +34,6 @@ export function FollowButton({ userId, initialFollowing = false, onFollowChange 
       setFollowing(!following)
       onFollowChange?.(!following)
     } catch (error) {
-      console.error("Follow error:", error)
     } finally {
       setLoading(false)
     }

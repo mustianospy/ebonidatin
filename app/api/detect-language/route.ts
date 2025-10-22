@@ -1,6 +1,6 @@
-export const dynamic = 'force-dynamic';
-import { NextRequest, NextResponse } from 'next/server';
-import type { Language } from '@/lib/i18n/translations';
+export const dynamic = "force-dynamic"
+import { type NextRequest, NextResponse } from "next/server"
+import type { Language } from "@/lib/i18n/translations"
 
 // Map of country codes to preferred languages from lib/i18n/detect-language.ts
 const countryLanguageMap: Record<string, Language> = {
@@ -62,38 +62,33 @@ const countryLanguageMap: Record<string, Language> = {
   TL: "pt",
   CV: "pt",
   ST: "pt",
-};
+}
 
 export async function GET(request: NextRequest) {
-  let language: Language = 'en'; // Default to English
+  let language: Language = "en"
 
   try {
-    const headersList = request.headers;
+    const headersList = request.headers
 
-    // Try to get country from Vercel's geo headers
-    const country = headersList.get("x-vercel-ip-country");
+    const country = headersList.get("x-vercel-ip-country")
 
     if (country && countryLanguageMap[country]) {
-      language = countryLanguageMap[country];
+      language = countryLanguageMap[country]
     } else {
-      // Fallback to Accept-Language header
-      const acceptLanguage = headersList.get("accept-language");
+      const acceptLanguage = headersList.get("accept-language")
       if (acceptLanguage) {
-        const primaryLang = acceptLanguage.split(",")[0].split("-")[0].toLowerCase();
+        const primaryLang = acceptLanguage.split(",")[0].split("-")[0].toLowerCase()
 
         if (primaryLang === "es") {
-          language = "es";
+          language = "es"
         } else if (primaryLang === "fr") {
-          language = "fr";
+          language = "fr"
         } else if (primaryLang === "pt") {
-          language = "pt";
+          language = "pt"
         }
       }
     }
-  } catch (error) {
-    console.error("[v0] Error detecting language:", error);
-    // language is already defaulted to 'en'
-  }
+  } catch (error) {}
 
-  return NextResponse.json({ language });
+  return NextResponse.json({ language })
 }
