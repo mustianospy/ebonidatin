@@ -1,10 +1,11 @@
 import { createBrowserClient } from '@supabase/ssr'
 
-export function createClient() {
-  return createBrowserClient(
+export const createClient = () =>
+  createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
+<<<<<<< HEAD
 }
 
 export async function signInWithGoogle(redirectTo?: string) {
@@ -24,3 +25,5 @@ export async function signInWithGoogle(redirectTo?: string) {
 
   return true;
 }
+=======
+>>>>>>> 49624c0 (Fresh start: Clean repository without secret history)

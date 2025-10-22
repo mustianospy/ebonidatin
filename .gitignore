@@ -34,3 +34,16 @@ yarn-error.log*
 .env
 .env.vercel
 .vercel/
+.env.preview
+.env.production
+
+# Environment files
+.env
+.env.local
+.env.production
+.env.preview
+.env.vercel
+.env.*.local
+
+# Only keep .env.example as template
+!.env.example
