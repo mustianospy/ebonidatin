@@ -66,7 +66,6 @@ export function VideoUploadForm({ onSuccess }: VideoUploadFormProps) {
         onSuccess?.()
       }, 2000)
     } catch (err) {
-      console.error("[v0] Upload error:", err)
       setError("Failed to upload video. Please try again.")
     } finally {
       setLoading(false)

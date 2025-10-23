@@ -11,7 +11,6 @@ export default function HomePage() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [modelOfDay, setModelOfDay] = useState<any>(null)
 
-  // Placeholder model images - in production these would come from database
   const modelImages = [
     "/beautiful-black-woman-model-1.jpg",
     "/beautiful-black-woman-model-2.jpg",
@@ -36,9 +35,7 @@ export default function HomePage() {
           const data = await response.json()
           setModelOfDay(data)
         }
-      } catch (err) {
-        // Silently fail - use placeholder
-      }
+      } catch (err) {}
     }
     fetchModelOfDay()
   }, [])
@@ -49,9 +46,14 @@ export default function HomePage() {
       <header className="border-b bg-card/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center text-white font-bold">
-              E
-            </div>
+            <Image
+              src="/eboni-logo.png"
+              alt="Eboni Dating Logo"
+              width={40}
+              height={40}
+              className="rounded-full"
+              priority
+            />
             <h1 className="text-xl sm:text-2xl font-bold text-primary">Eboni Dating</h1>
           </div>
           <nav className="hidden md:flex gap-6 items-center">
@@ -79,7 +81,7 @@ export default function HomePage() {
         <div className="absolute inset-0">
           <Image
             src={modelImages[currentImageIndex] || "/placeholder.svg"}
-            alt="Model of the day"
+            alt={`Model carousel image ${currentImageIndex + 1} of ${modelImages.length}`}
             fill
             className="object-cover transition-opacity duration-1000"
             priority
@@ -99,7 +101,7 @@ export default function HomePage() {
           <div className="flex flex-col sm:flex-row gap-4">
             <Link href="/auth/sign-up">
               <Button size="lg" className="bg-amber-600 hover:bg-amber-700 text-white">
-                Get Started <ArrowRight className="ml-2 w-4 h-4" />
+                Get Started <ArrowRight className="ml-2 w-4 h-4" aria-hidden="true" />
               </Button>
             </Link>
             <Link href="/auth/login">
@@ -111,7 +113,11 @@ export default function HomePage() {
         </div>
 
         {/* Image Navigation */}
-        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2">
+        <div
+          className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2"
+          role="tablist"
+          aria-label="Carousel slides"
+        >
           {modelImages.map((_, idx) => (
             <button
               key={idx}
@@ -119,7 +125,9 @@ export default function HomePage() {
               className={`w-2 h-2 rounded-full transition-all ${
                 idx === currentImageIndex ? "bg-white w-8" : "bg-white/50"
               }`}
-              aria-label={`Go to image ${idx + 1}`}
+              aria-label={`Go to slide ${idx + 1}`}
+              aria-selected={idx === currentImageIndex}
+              role="tab"
             />
           ))}
         </div>
@@ -129,7 +137,7 @@ export default function HomePage() {
       <section className="py-12 sm:py-16 md:py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center gap-2 mb-8">
-            <Sparkles className="w-6 h-6 text-amber-600" />
+            <Sparkles className="w-6 h-6 text-amber-600" aria-hidden="true" />
             <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">
               Model of the Day
             </h3>
@@ -141,9 +149,10 @@ export default function HomePage() {
                 <div className="relative w-full aspect-square rounded-lg overflow-hidden shadow-lg">
                   <Image
                     src={modelOfDay.profile_photo_url || "/placeholder.svg"}
-                    alt={modelOfDay.full_name}
+                    alt={`${modelOfDay.full_name}, Model of the Day`}
                     fill
                     className="object-cover"
+                    sizes="(max-width: 768px) 100vw, 33vw"
                   />
                 </div>
               </div>
@@ -196,7 +205,7 @@ export default function HomePage() {
               { icon: Users, title: "Active Community", desc: "Thousands of verified singles" },
             ].map((feature, idx) => (
               <div key={idx} className="bg-card p-6 rounded-lg border border-border hover:shadow-lg transition">
-                <feature.icon className="w-8 h-8 text-amber-600 mb-4" />
+                <feature.icon className="w-8 h-8 text-amber-600 mb-4" aria-hidden="true" />
                 <h4 className="font-semibold text-foreground mb-2">{feature.title}</h4>
                 <p className="text-muted-foreground text-sm">{feature.desc}</p>
               </div>
@@ -234,7 +243,7 @@ export default function HomePage() {
               >
                 {plan.popular && (
                   <div className="text-sm font-semibold mb-2 flex items-center gap-1">
-                    <Star className="w-4 h-4" /> Most Popular
+                    <Star className="w-4 h-4" aria-hidden="true" /> Most Popular
                   </div>
                 )}
                 <h4 className="text-xl font-bold mb-2">{plan.name}</h4>
@@ -245,7 +254,7 @@ export default function HomePage() {
                 <ul className="space-y-2 mb-6">
                   {plan.features.map((feature, fidx) => (
                     <li key={fidx} className="text-sm flex items-center gap-2">
-                      <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-current" aria-hidden="true" />
                       {feature}
                     </li>
                   ))}
@@ -270,7 +279,7 @@ export default function HomePage() {
           </p>
           <Link href="/auth/sign-up">
             <Button size="lg" className="bg-amber-600 hover:bg-amber-700">
-              Start Your Journey Today <ArrowRight className="ml-2 w-4 h-4" />
+              Start Your Journey Today <ArrowRight className="ml-2 w-4 h-4" aria-hidden="true" />
             </Button>
           </Link>
         </div>

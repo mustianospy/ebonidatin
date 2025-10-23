@@ -25,7 +25,7 @@ Add these environment variables to your Vercel project in the **Vars** section o
 
 ## Analytics (Optional)
 - `NEXT_PUBLIC_GOOGLE_ANALYTICS_ID` - Get from Google Analytics
-- `NEXT_PUBLIC_MIXPANEL_TOKEN` - Get from Mixpanel dashboard
+- `MIXPANEL_TOKEN` - Get from Mixpanel dashboard (server-side only, do NOT use NEXT_PUBLIC_ prefix)
 
 ## AI Features (Optional - for smart matching)
 - `OPENAI_API_KEY` - Get from OpenAI platform
