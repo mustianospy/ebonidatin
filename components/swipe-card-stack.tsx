@@ -92,7 +92,6 @@ export function SwipeCardStack({ userId, initialProfiles }: SwipeCardStackProps)
       setPhotoIndex(0)
       setDragOffset({ x: 0, y: 0 })
     } catch (error) {
-      console.error("Swipe error:", error)
       toast({
         title: "Error",
         description: "Failed to record swipe",

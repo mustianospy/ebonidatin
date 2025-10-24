@@ -41,7 +41,7 @@ export function RichMessageInput({ receiverId, onSend }: RichMessageInputProps) 
       setSelectedEmoji(null)
       onSend?.()
     } catch (error) {
-      console.error("Send error:", error)
+      // Message state is maintained for retry
     } finally {
       setSending(false)
     }

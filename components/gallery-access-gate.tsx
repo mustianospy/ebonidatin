@@ -37,7 +37,6 @@ export function GalleryAccessGate({ userId, children }: GalleryAccessGateProps) 
         setHasAccess(profile.gallery_access && profile.subscription_tier !== "free")
       }
     } catch (error) {
-      console.error("Access check error:", error)
     } finally {
       setLoading(false)
     }

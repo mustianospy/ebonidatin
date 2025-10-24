@@ -93,7 +93,6 @@ export function SubscriptionPlans({ userId, currentPlan = "starter" }: Subscript
     setLoading(planId)
 
     try {
-      // Create Stripe checkout session
       const response = await fetch("/api/create-checkout-session", {
         method: "POST",
         headers: {
@@ -109,10 +108,8 @@ export function SubscriptionPlans({ userId, currentPlan = "starter" }: Subscript
 
       const { url } = await response.json()
 
-      // Redirect to Stripe checkout
       window.location.href = url
     } catch (error) {
-      console.error("[v0] Subscription error:", error)
       toast({
         title: "Error",
         description: "Failed to start subscription process",
