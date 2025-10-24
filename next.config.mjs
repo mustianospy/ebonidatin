@@ -1,3 +1,5 @@
+import { withSentryConfig } from "@sentry/nextjs";
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   eslint: {
@@ -9,6 +11,10 @@ const nextConfig = {
   
   images: {
     remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "lh3.googleusercontent.com",
+      },
       {
         protocol: "https",
         hostname: "**.supabase.co",
@@ -30,7 +36,7 @@ const nextConfig = {
 
   compress: true,
   swcMinify: true,
-  productionBrowserSourceMaps: false,
+  productionBrowserSourceMaps: true,
 
   async headers() {
     return [
@@ -108,8 +114,21 @@ const nextConfig = {
   },
 
   experimental: {
+    instrumentationHook: true,
     optimizePackageImports: ["@/components", "@/lib"],
   },
 }
 
-export default nextConfig
+const sentryWebpackPluginOptions = {
+  // Additional config options for the Sentry Webpack plugin. Keep in mind that
+  // the following options are set automatically, and overriding them is not
+  // recommended:
+  //   release, url, org, project, authToken, configFile, stripPrefix,
+  //   urlPrefix, include, ignore
+
+  silent: true, // Suppresses all logs
+  // For all available options, see:
+  // https://github.com/getsentry/sentry-webpack-plugin#options.
+};
+
+export default withSentryConfig(nextConfig, sentryWebpackPluginOptions);

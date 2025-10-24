@@ -78,24 +78,24 @@ export default function DashboardContent({ profile }: DashboardContentProps) {
             <span className="text-xl font-bold text-gray-900">Eboni Dating</span>
           </Link>
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" asChild>
+            <Button variant="ghost" size="icon" asChild aria-label="Messages">
               <Link href="/messages">
                 <MessageCircle className="h-5 w-5" />
               </Link>
             </Button>
-            <Button variant="ghost" size="icon" asChild>
+            <Button variant="ghost" size="icon" asChild aria-label="Settings">
               <Link href="/profile/edit">
                 <Settings className="h-5 w-5" />
               </Link>
             </Button>
-            <Button variant="ghost" size="icon" onClick={handleLogout} disabled={isLoggingOut}>
+            <Button variant="ghost" size="icon" onClick={handleLogout} disabled={isLoggingOut} aria-label="Logout">
               <LogOut className="h-5 w-5" />
             </Button>
           </div>
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto">
           {/* Welcome Section */}
           <div className="mb-8">
@@ -240,7 +240,9 @@ export default function DashboardContent({ profile }: DashboardContentProps) {
                       <p className="font-semibold capitalize">{profile.membership_tier} Plan</p>
                       <p className="text-sm text-muted-foreground">Upgrade to unlock more features</p>
                     </div>
-                    <Button variant="outline">Upgrade</Button>
+                    <Button asChild variant="outline">
+                        <Link href="/pricing">Upgrade</Link>
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
@@ -287,7 +289,10 @@ export default function DashboardContent({ profile }: DashboardContentProps) {
             </div>
           </div>
         </div>
-      </div>
+        <div aria-live="polite" aria-atomic="true">
+          {isLoggingOut && <p>Logging out...</p>}
+        </div>
+      </main>
     </div>
   )
 }

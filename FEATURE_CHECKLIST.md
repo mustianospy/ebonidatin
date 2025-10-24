@@ -189,7 +189,7 @@
 ## Future Enhancements
 
 ### Phase 2 Features
-- [ ] Video calling
+- [x] Video calling
 - [ ] Live streaming
 - [ ] Events system
 - [ ] Groups/communities

@@ -9,13 +9,20 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import Link from "next/link"
-import { useState } from "react"
+import { useState, useRef, useEffect } from "react"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const errorRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (error && errorRef.current) {
+      errorRef.current.focus()
+    }
+  }, [error])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -131,7 +138,7 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              <form onSubmit={handleLogin}>
+              <form onSubmit={handleLogin} aria-busy={isLoading}>
                 <div className="flex flex-col gap-6">
                   <div className="grid gap-2">
                     <Label htmlFor="email">Email</Label>
@@ -157,9 +164,11 @@ export default function LoginPage() {
                     />
                   </div>
                   {error && (
-                    <Alert variant="destructive">
-                      <AlertDescription>{error}</AlertDescription>
-                    </Alert>
+                    <div ref={errorRef} tabIndex={-1}>
+                      <Alert variant="destructive" aria-live="polite">
+                        <AlertDescription>{error}</AlertDescription>
+                      </Alert>
+                    </div>
                   )}
                   <Button type="submit" className="w-full bg-amber-600 hover:bg-amber-700" disabled={isLoading}>
                     {isLoading ? "Signing in..." : "Sign In"}

@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useRef, useEffect } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -33,6 +33,13 @@ export function EnhancedSignupForm() {
   const [profilePicture, setProfilePicture] = useState<File | null>(null)
   const [profilePicturePreview, setProfilePicturePreview] = useState<string | null>(null)
   const [uploadingPicture, setUploadingPicture] = useState(false)
+  const errorRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (error && errorRef.current) {
+      errorRef.current.focus()
+    }
+  }, [error])
 
   const countries = getCountries()
   const cities = country ? getCitiesByCountry(country) : []
@@ -262,7 +269,7 @@ export function EnhancedSignupForm() {
         <CardDescription className="text-center text-gray-500">Join our community and find your match</CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSignUp} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <form onSubmit={handleSignUp} className="grid grid-cols-1 md:grid-cols-2 gap-6" aria-busy={loading}>
           <div className="space-y-4">
             <div className="flex flex-col items-center space-y-2">
               <Label htmlFor="profilePicture" className="cursor-pointer">
@@ -361,7 +368,7 @@ export function EnhancedSignupForm() {
               <div className="space-y-2">
                 <Label htmlFor="country">Country</Label>
                 <Select onValueChange={setCountry} value={country}>
-                  <SelectTrigger>
+                  <SelectTrigger id="country">
                     <SelectValue placeholder="Select a country" />
                   </SelectTrigger>
                   <SelectContent>
@@ -376,7 +383,7 @@ export function EnhancedSignupForm() {
               <div className="space-y-2">
                 <Label htmlFor="city">City</Label>
                 <Select onValueChange={setCity} value={city} disabled={!country}>
-                  <SelectTrigger>
+                  <SelectTrigger id="city">
                     <SelectValue placeholder="Select a city" />
                   </SelectTrigger>
                   <SelectContent>
@@ -391,9 +398,9 @@ export function EnhancedSignupForm() {
             </div>
 
             <div className="space-y-2">
-              <Label>I am a...</Label>
+              <Label htmlFor="userType">I am a...</Label>
               <Select onValueChange={(value) => setUserType(value as "user" | "model")} value={userType}>
-                <SelectTrigger>
+                <SelectTrigger id="userType">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -407,9 +414,9 @@ export function EnhancedSignupForm() {
 
             {requiresPayment && (
               <div className="space-y-2">
-                <Label>Payment Method</Label>
+                <Label htmlFor="paymentMethod">Payment Method</Label>
                 <Select onValueChange={setPaymentMethod} value={paymentMethod}>
-                  <SelectTrigger>
+                  <SelectTrigger id="paymentMethod">
                     <SelectValue placeholder="Select payment method" />
                   </SelectTrigger>
                   <SelectContent>
@@ -433,9 +440,11 @@ export function EnhancedSignupForm() {
 
           <div className="md:col-span-2">
             {error && (
-              <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
+               <div ref={errorRef} tabIndex={-1}>
+                <Alert variant="destructive" aria-live="polite">
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              </div>
             )}
           </div>
 

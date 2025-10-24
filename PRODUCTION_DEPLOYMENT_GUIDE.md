@@ -10,11 +10,11 @@
 **Password**: 58259@staR
 
 To create the admin user, run:
-\`\`\`bash
+```bash
 curl -X POST https://ebonidating.com/api/admin/create-admin \
   -H "Content-Type: application/json" \
   -d '{"adminEmail":"admin@ebonidating.com","adminPassword":"58259@staR"}'
-\`\`\`
+```
 
 ## Performance Optimizations
 - Image optimization with AVIF/WebP formats
@@ -53,6 +53,7 @@ curl -X POST https://ebonidating.com/api/admin/create-admin \
 ✅ Dark/Light theme toggle
 ✅ Fully responsive design
 ✅ Performance optimized
+✅ Video Calling
 
 ## Environment Variables Required
 All integrations are connected:
