@@ -1,5 +1,3 @@
-import { createClient } from '@/lib/supabase/server'
-import { NextResponse } from 'next/server'
 // app/api/push/send/route.ts
 import { createRouteHandlerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
@@ -43,19 +41,7 @@ export async function POST(req: NextRequest) {
     webPush.sendNotification(s.subscription, JSON.stringify(payload)),
   )
 
-export async function POST(request: Request) {
   try {
-    const supabase = createClient()
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    // Your push notification logic here
-    return NextResponse.json({ success: true })
-  } catch (error) {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
     await Promise.all(notificationPromises)
     return NextResponse.json({ message: "Notifications sent" }, { status: 200 })
   } catch (err) {

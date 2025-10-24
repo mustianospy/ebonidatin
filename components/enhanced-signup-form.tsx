@@ -39,12 +39,6 @@ export function EnhancedSignupForm() {
   const requiresPayment = membershipTier !== "free"
 
   const handleProfilePictureChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // ... (rest of the function remains the same)
-  };
-
-  const uploadProfilePicture = async (): Promise<string | null> => {
-    // ... (rest of the function remains the same)
-  };
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0]
       setProfilePicture(file)
@@ -213,8 +207,6 @@ export function EnhancedSignupForm() {
   }
 
   const handleGoogleSignUp = async () => {
-    // ... (rest of the function remains the same)
-  };
     const supabase = createClient()
     try {
       const { error } = await supabase.auth.signInWithOAuth({
@@ -265,7 +257,6 @@ export function EnhancedSignupForm() {
 
   return (
     <Card className="w-full max-w-4xl mx-auto">
-      {/* ... (rest of the form remains the same) */}
       <CardHeader>
         <CardTitle className="text-3xl font-bold text-center text-gray-800">Create your Account</CardTitle>
         <CardDescription className="text-center text-gray-500">Join our community and find your match</CardDescription>

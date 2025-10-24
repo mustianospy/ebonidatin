@@ -37,6 +37,7 @@ const nextConfig = {
       {
         source: "/:path*",
         headers: [
+          // Security headers
           {
             key: "X-DNS-Prefetch-Control",
             value: "on",
@@ -61,13 +62,35 @@ const nextConfig = {
             key: "Permissions-Policy",
             value: "camera=(), microphone=(), geolocation=()",
           },
+          // Performance headers
           {
             key: "Cache-Control",
             value: "public, max-age=31536000, immutable",
           },
+          // Content Security Policy
           {
             key: "Content-Security-Policy",
-            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.vercel-insights.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://*.supabase.co https://stripe.com;",
+            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.vercel-insights.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://api.vercel.com https://*.supabase.co https://stripe.com;",
+          },
+        ],
+      },
+      // Cache static assets
+      {
+        source: "/static/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+        ],
+      },
+      // Cache API responses
+      {
+        source: "/api/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=60, s-maxage=120",
           },
         ],
       },
@@ -82,6 +105,10 @@ const nextConfig = {
         permanent: true,
       },
     ]
+  },
+
+  experimental: {
+    optimizePackageImports: ["@/components", "@/lib"],
   },
 }
 
