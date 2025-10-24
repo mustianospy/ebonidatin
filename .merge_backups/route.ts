@@ -1,9 +1,12 @@
+<<<<<<< HEAD
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+=======
 // app/api/push/subscribe/route.ts
 import { createRouteHandlerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
 import { type NextRequest, NextResponse } from "next/server"
+>>>>>>> 5f7ecfe94c0ff42d7e2c8d499a6f34aef0565396
 
 export async function POST(request: Request) {
   try {
@@ -14,11 +17,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+<<<<<<< HEAD
     // Your subscription logic here
     return NextResponse.json({ success: true })
   } catch (error) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
+=======
   const {
     data: { user },
   } = await supabase.auth.getUser()
@@ -40,4 +45,5 @@ export async function POST(request: Request) {
   }
 
   return NextResponse.json({ message: "Subscription saved" }, { status: 201 })
+>>>>>>> 5f7ecfe94c0ff42d7e2c8d499a6f34aef0565396
 }

@@ -1,7 +1,5 @@
-<<<<<<< HEAD
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
-=======
 // app/api/push/send/route.ts
 import { createRouteHandlerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
@@ -44,11 +42,9 @@ export async function POST(req: NextRequest) {
   const notificationPromises = subscriptions.map((s) =>
     webPush.sendNotification(s.subscription, JSON.stringify(payload)),
   )
->>>>>>> 5f7ecfe94c0ff42d7e2c8d499a6f34aef0565396
 
 export async function POST(request: Request) {
   try {
-<<<<<<< HEAD
     const supabase = createClient()
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     
@@ -60,11 +56,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true })
   } catch (error) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
-=======
     await Promise.all(notificationPromises)
     return NextResponse.json({ message: "Notifications sent" }, { status: 200 })
   } catch (err) {
     return NextResponse.json({ error: "Failed to send notifications" }, { status: 500 })
->>>>>>> 5f7ecfe94c0ff42d7e2c8d499a6f34aef0565396
   }
 }

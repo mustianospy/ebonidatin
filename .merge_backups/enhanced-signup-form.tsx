@@ -39,12 +39,14 @@ export function EnhancedSignupForm() {
   const requiresPayment = membershipTier !== "free"
 
   const handleProfilePictureChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+<<<<<<< HEAD
     // ... (rest of the function remains the same)
   };
 
   const uploadProfilePicture = async (): Promise<string | null> => {
     // ... (rest of the function remains the same)
   };
+=======
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0]
       setProfilePicture(file)
@@ -73,6 +75,7 @@ export function EnhancedSignupForm() {
       setUploadingPicture(false)
     }
   }
+>>>>>>> 5f7ecfe94c0ff42d7e2c8d499a6f34aef0565396
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -213,8 +216,10 @@ export function EnhancedSignupForm() {
   }
 
   const handleGoogleSignUp = async () => {
+<<<<<<< HEAD
     // ... (rest of the function remains the same)
   };
+=======
     const supabase = createClient()
     try {
       const { error } = await supabase.auth.signInWithOAuth({
@@ -230,6 +235,7 @@ export function EnhancedSignupForm() {
       setError(err.message || "An error occurred during Google sign up. Please try again.")
     }
   }
+>>>>>>> 5f7ecfe94c0ff42d7e2c8d499a6f34aef0565396
 
   if (success) {
     return (
@@ -265,7 +271,9 @@ export function EnhancedSignupForm() {
 
   return (
     <Card className="w-full max-w-4xl mx-auto">
+<<<<<<< HEAD
       {/* ... (rest of the form remains the same) */}
+=======
       <CardHeader>
         <CardTitle className="text-3xl font-bold text-center text-gray-800">Create your Account</CardTitle>
         <CardDescription className="text-center text-gray-500">Join our community and find your match</CardDescription>
@@ -482,6 +490,7 @@ export function EnhancedSignupForm() {
           </div>
         </form>
       </CardContent>
+>>>>>>> 5f7ecfe94c0ff42d7e2c8d499a6f34aef0565396
     </Card>
   )
 }
