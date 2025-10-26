@@ -8,7 +8,6 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  
   images: {
     remotePatterns: [
       {
@@ -32,11 +31,12 @@ const nextConfig = {
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     minimumCacheTTL: 31536000,
+    unoptimized: true,
   },
 
   compress: true,
   swcMinify: true,
-  productionBrowserSourceMaps: true,
+  productionBrowserSourceMaps: false,
 
   async headers() {
     return [
@@ -120,15 +120,7 @@ const nextConfig = {
 }
 
 const sentryWebpackPluginOptions = {
-  // Additional config options for the Sentry Webpack plugin. Keep in mind that
-  // the following options are set automatically, and overriding them is not
-  // recommended:
-  //   release, url, org, project, authToken, configFile, stripPrefix,
-  //   urlPrefix, include, ignore
-
-  silent: true, // Suppresses all logs
-  // For all available options, see:
-  // https://github.com/getsentry/sentry-webpack-plugin#options.
+  silent: true,
 };
 
 export default withSentryConfig(nextConfig, sentryWebpackPluginOptions);

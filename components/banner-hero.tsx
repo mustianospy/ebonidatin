@@ -13,12 +13,11 @@ interface BannerHeroProps {
     href: string
   }
   overlay?: boolean
-  "aria-label": string
 }
 
-export function BannerHero({ image, title, subtitle, cta, overlay = true, ...props }: BannerHeroProps) {
+export function BannerHero({ image, title, subtitle, cta, overlay = true }: BannerHeroProps) {
   return (
-    <div role="banner" aria-label={props["aria-label"]} className="relative w-full h-96 md:h-[500px] overflow-hidden rounded-xl shadow-2xl group">
+    <div className="relative w-full h-96 md:h-[500px] overflow-hidden rounded-xl shadow-2xl group">
       {/* Background Image */}
       <img
         src={image || "/placeholder.svg"}

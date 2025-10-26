@@ -1,12 +1,11 @@
-
 import type React from "react"
 import type { Metadata } from "next"
 import { GeistSans } from "geist/font/sans"
 import { GeistMono } from "geist/font/mono"
 import { Analytics } from "@vercel/analytics/next"
 import { Suspense } from "react"
+import { ErrorBoundary } from "@/components/error-boundary"
 import { ThemeProvider } from "@/lib/theme/theme-provider"
-import { HeaderClient } from "@/components/header-client"
 import "./globals.css"
 
 export const metadata: Metadata = {
@@ -78,6 +77,7 @@ export const metadata: Metadata = {
     google: "your-google-verification-code",
     yandex: "your-yandex-verification-code",
   },
+  generator: "v0.app",
 }
 
 export const viewport = {
@@ -103,10 +103,20 @@ export default function RootLayout({
       </head>
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
         <ThemeProvider>
-          <Suspense fallback={<div>Loading...</div>}>
-            <HeaderClient />
-            <main className="p-4">{children}</main>
-          </Suspense>
+          <ErrorBoundary>
+            <Suspense
+              fallback={
+                <div className="flex min-h-screen items-center justify-center">
+                  <div className="text-center">
+                    <div className="mb-4 h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-cyan-500 mx-auto" />
+                    <p className="text-gray-600">Loading...</p>
+                  </div>
+                </div>
+              }
+            >
+              {children}
+            </Suspense>
+          </ErrorBoundary>
         </ThemeProvider>
         <Analytics />
       </body>
