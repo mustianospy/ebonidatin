@@ -1,6 +1,8 @@
 
 import { BannerHero } from "@/components/banner-hero";
+import { FeaturesSection } from "@/components/features-section";
 import { ModelOfPeriod } from "@/components/model-of-period";
+import { TestimonialsSection } from "@/components/testimonials-section";
 
 export default function HomePage() {
   const models = [
@@ -43,29 +45,20 @@ export default function HomePage() {
   ];
 
   return (
-    <div className="m-4">
+    <>
       <BannerHero
-        image="/couple-1.jpg"
+        image="/hero-banner.jpg"
         title="Welcome to Eboni"
         subtitle="The best place to find your soulmate."
         cta={{
           text: "Get Started",
           href: "/auth/sign-up",
-          // Suggestion: Log a 'select_content' event here for analytics.
-          // This can help you track how many users are starting the sign-up process
-          // from the homepage banner.
-          // Example:
-          // onClick: () => {
-          //   analytics.logEvent('select_content', {
-          //     content_type: 'button',
-          //     item_id: 'get_started_banner',
-          //   });
-          // }
         }}
+        aria-label="Find your soulmate on Eboni, the best place for black singles to connect."
       />
-      <div className="mt-8">
-        <ModelOfPeriod models={models} />
-      </div>
-    </div>
+      <FeaturesSection />
+      <ModelOfPeriod models={models} />
+      <TestimonialsSection />
+    </>
   );
 }

@@ -37,12 +37,18 @@ export function ImageCarousel({ images, autoSlideInterval = 10000, title, subtit
   }
 
   return (
-    <div className="relative w-full h-96 md:h-[500px] rounded-lg overflow-hidden group">
+    <div
+      role="region"
+      aria-roledescription="carousel"
+      aria-label={title || 'Image carousel'}
+      className="relative w-full h-96 md:h-[500px] rounded-lg overflow-hidden group"
+    >
       {/* Images */}
-      <div className="relative w-full h-full">
+      <div aria-live="polite" className="relative w-full h-full">
         {images.map((image, index) => (
           <div
             key={index}
+            aria-hidden={index !== currentIndex}
             className={`absolute inset-0 transition-opacity duration-500 ${
               index === currentIndex ? "opacity-100" : "opacity-0"
             }`}
@@ -65,8 +71,9 @@ export function ImageCarousel({ images, autoSlideInterval = 10000, title, subtit
           <Button
             variant="ghost"
             size="icon"
-            className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/40 text-white opacity-0 group-hover:opacity-100 transition-opacity z-10"
+            className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/40 text-white opacity-0 group-hover:opacity-100 transition-opacity z-10 focus-visible:opacity-100"
             onClick={goToPrevious}
+            aria-label="Go to previous slide"
           >
             <ChevronLeft className="h-6 w-6" />
           </Button>
@@ -74,8 +81,9 @@ export function ImageCarousel({ images, autoSlideInterval = 10000, title, subtit
           <Button
             variant="ghost"
             size="icon"
-            className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/40 text-white opacity-0 group-hover:opacity-100 transition-opacity z-10"
+            className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/40 text-white opacity-0 group-hover:opacity-100 transition-opacity z-10 focus-visible:opacity-100"
             onClick={goToNext}
+            aria-label="Go to next slide"
           >
             <ChevronRight className="h-6 w-6" />
           </Button>
@@ -90,6 +98,7 @@ export function ImageCarousel({ images, autoSlideInterval = 10000, title, subtit
                 }`}
                 onClick={() => setCurrentIndex(index)}
                 aria-label={`Go to slide ${index + 1}`}
+                aria-current={index === currentIndex ? 'true' : 'false'}
               />
             ))}
           </div>

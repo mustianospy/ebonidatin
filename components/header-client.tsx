@@ -4,8 +4,28 @@ import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { useEffect, useState } from "react"
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 
 export function HeaderClient() {
+  const [user, setUser] = useState(null)
+  const supabase = createClientComponentClient()
+
+  useEffect(() => {
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      setUser(session?.user ?? null)
+    })
+
+    return () => {
+      authListener?.subscription.unsubscribe()
+    }
+  }, [supabase.auth])
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    window.location.href = "/"
+  }
+
   return (
     <header className="border-b bg-card/80 backdrop-blur-sm sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
@@ -21,21 +41,38 @@ export function HeaderClient() {
           <h1 className="text-xl sm:text-2xl font-bold text-primary">Eboni Dating</h1>
         </div>
         <nav className="hidden md:flex gap-6 items-center">
-          <Link href="/auth/login" className="text-foreground/60 hover:text-foreground transition">
-            Login
-          </Link>
-          <Link href="/auth/sign-up" className="text-foreground/60 hover:text-foreground transition">
-            Sign Up
-          </Link>
+          {user ? (
+            <>
+              <span className="text-foreground/60">Welcome, {user.email}</span>
+              <Button onClick={handleLogout} size="sm" variant="outline">
+                Logout
+              </Button>
+            </>
+          ) : (
+            <>
+              <Link href="/auth/login" className="text-foreground/60 hover:text-foreground transition">
+                Login
+              </Link>
+              <Link href="/auth/sign-up" className="text-foreground/60 hover:text-foreground transition">
+                Sign Up
+              </Link>
+            </>
+          )}
           <ThemeToggle />
         </nav>
         <div className="md:hidden flex items-center gap-2">
           <ThemeToggle />
-          <Link href="/auth/login">
-            <Button size="sm" variant="outline">
-              Login
+          {user ? (
+            <Button onClick={handleLogout} size="sm" variant="outline">
+              Logout
             </Button>
-          </Link>
+          ) : (
+            <Link href="/auth/login">
+              <Button size="sm" variant="outline">
+                Login
+              </Button>
+            </Link>
+          )}
         </div>
       </div>
     </header>

@@ -6,6 +6,7 @@ import { Analytics } from "@vercel/analytics/next"
 import { Suspense } from "react"
 import { ErrorBoundary } from "@/components/error-boundary"
 import { ThemeProvider } from "@/lib/theme/theme-provider"
+import { HeaderClient } from "@/components/header-client"
 import "./globals.css"
 
 export const metadata: Metadata = {
@@ -77,7 +78,6 @@ export const metadata: Metadata = {
     google: "your-google-verification-code",
     yandex: "your-yandex-verification-code",
   },
-    generator: 'v0.app'
 }
 
 export const viewport = {
@@ -104,7 +104,10 @@ export default function RootLayout({
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
         <ThemeProvider>
           <ErrorBoundary>
-            <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
+            <Suspense fallback={<div>Loading...</div>}>
+              <HeaderClient />
+              <main className="p-4">{children}</main>
+            </Suspense>
           </ErrorBoundary>
         </ThemeProvider>
         <Analytics />
