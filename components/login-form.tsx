@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,18 +20,30 @@ export function LoginForm() {
   const router = useRouter();
   const supabase = createClient();
 
+  // ✅ Auto-redirect if already logged in
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (data?.session) {
+        router.replace("/dashboard");
+      }
+    };
+    checkSession();
+  }, [router, supabase]);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) throw error;
+      if (!data?.user) throw new Error("Login failed. No user returned.");
 
       va.track("login_success", { method: "email" });
       router.push("/dashboard");
@@ -47,7 +59,7 @@ export function LoginForm() {
     va.track("login_attempt", { method: "google" });
     try {
       const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
+        provider: "google",
         options: {
           redirectTo: `${window.location.origin}/auth/callback`,
         },
@@ -63,20 +75,38 @@ export function LoginForm() {
   };
 
   return (
-    <Card className="w-full max-w-md mx-auto">
+    <Card className="w-full max-w-md mx-auto shadow-md">
       <CardHeader>
-        <CardTitle className="text-3xl font-bold text-center text-gray-800">Welcome Back</CardTitle>
-        <CardDescription className="text-center text-gray-500">Sign in to your account</CardDescription>
+        <CardTitle className="text-3xl font-bold text-center text-gray-800">
+          Welcome Back
+        </CardTitle>
+        <CardDescription className="text-center text-gray-500">
+          Sign in to your account
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleLogin} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" placeholder="email@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
+            <Input
+              id="email"
+              type="email"
+              placeholder="email@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
-            <Input id="password" type="password" placeholder="********" value={password} onChange={(e) => setPassword(e.target.value)} required />
+            <Input
+              id="password"
+              type="password"
+              placeholder="********"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
           </div>
 
           {error && (
@@ -88,7 +118,13 @@ export function LoginForm() {
           <Button type="submit" className="w-full" disabled={loading}>
             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Sign In
           </Button>
-          <Button type="button" variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={loading}>
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full"
+            onClick={handleGoogleSignIn}
+            disabled={loading}
+          >
             <Mail className="mr-2 h-4 w-4" /> Sign In with Google
           </Button>
         </form>
