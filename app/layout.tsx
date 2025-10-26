@@ -1,10 +1,10 @@
+
 import type React from "react"
 import type { Metadata } from "next"
 import { GeistSans } from "geist/font/sans"
 import { GeistMono } from "geist/font/mono"
 import { Analytics } from "@vercel/analytics/next"
 import { Suspense } from "react"
-import { ErrorBoundary } from "@/components/error-boundary"
 import { ThemeProvider } from "@/lib/theme/theme-provider"
 import { HeaderClient } from "@/components/header-client"
 import "./globals.css"
@@ -103,12 +103,10 @@ export default function RootLayout({
       </head>
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
         <ThemeProvider>
-          <ErrorBoundary>
-            <Suspense fallback={<div>Loading...</div>}>
-              <HeaderClient />
-              <main className="p-4">{children}</main>
-            </Suspense>
-          </ErrorBoundary>
+          <Suspense fallback={<div>Loading...</div>}>
+            <HeaderClient />
+            <main className="p-4">{children}</main>
+          </Suspense>
         </ThemeProvider>
         <Analytics />
       </body>
