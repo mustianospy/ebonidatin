@@ -3,7 +3,7 @@
 import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
-import { ThemeToggle } from "@/components/theme-toggle"
+import { ThemeSelector } from "@/components/theme-selector"
 
 export function HeaderClient() {
   return (
@@ -27,10 +27,10 @@ export function HeaderClient() {
           <Link href="/auth/sign-up" className="text-foreground/60 hover:text-foreground transition">
             Sign Up
           </Link>
-          <ThemeToggle />
+          <ThemeSelector />
         </nav>
         <div className="md:hidden flex items-center gap-2">
-          <ThemeToggle />
+          <ThemeSelector />
           <Link href="/auth/login">
             <Button size="sm" variant="outline">
               Login
