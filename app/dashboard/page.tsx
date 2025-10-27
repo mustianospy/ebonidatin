@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
-import DashboardContent from "@/components/dashboard-content"
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -12,13 +11,16 @@ export default async function DashboardPage() {
     redirect("/auth/login")
   }
 
-  // Check if profile exists
-  const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).single()
-
-  // If no profile, redirect to onboarding
-  if (!profile) {
-    redirect("/onboarding")
-  }
-
-  return <DashboardContent profile={profile} />
+  return (
+    <div className="flex min-h-screen flex-col">
+      <header className="border-b border-border bg-card">
+        <div className="container mx-auto px-4 py-4">
+          <h1 className="text-2xl font-bold">Welcome, {user.email}</h1>
+        </div>
+      </header>
+      <main className="flex-1 container mx-auto px-4 py-8">
+        <p className="text-muted-foreground">Dashboard coming soon...</p>
+      </main>
+    </div>
+  )
 }
