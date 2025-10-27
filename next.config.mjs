@@ -13,17 +13,31 @@ const nextConfig = {
     },
   },
   images: {
-    domains: [
-      "avatars.githubusercontent.com",
-      "lh3.googleusercontent.com",
-      "images.unsplash.com",
-      "cdn.jsdelivr.net",
-      "vercel.app",
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "avatars.githubusercontent.com",
+      },
+      {
+        protocol: "https",
+        hostname: "lh3.googleusercontent.com",
+      },
+      {
+        protocol: "https",
+        hostname: "images.unsplash.com",
+      },
+      {
+        protocol: "https",
+        hostname: "cdn.jsdelivr.net",
+      },
+      {
+        protocol: "https",
+        hostname: "vercel.app",
+      },
     ],
     formats: ["image/avif", "image/webp"],
     unoptimized: true,
   },
-  swcMinify: true,
   compress: true,
   poweredByHeader: false,
   env: {
